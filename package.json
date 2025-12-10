@@ -15,6 +15,7 @@
     "prettier": "^3.7.4"
   },
   "scripts": {
+    "migrate": "drizzle-kit migrate",
     "dev": "bun run --watch src/index.ts",
     "test": "bun test",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
