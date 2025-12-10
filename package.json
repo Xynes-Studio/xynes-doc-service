@@ -6,13 +6,15 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/pg": "^8.15.6",
+    "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
     "drizzle-kit": "^0.31.8",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "uuid": "^13.0.0"
   },
   "scripts": {
     "migrate": "drizzle-kit migrate",

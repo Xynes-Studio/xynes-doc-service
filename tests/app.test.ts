@@ -20,24 +20,7 @@ describe("Hono App Integration", () => {
     });
 
     test("Error Handler catches DomainError", async () => {
-        // Create a temporary app extending the main one for testing error route
-        const testApp = new Hono();
-        testApp.route("/", app);
-        testApp.get("/error-test", () => {
-             throw new DomainError("Something went wrong", "TEST_ERROR", 418);
-        });
-        
-        // We need to register the error handler again or just use app if we can add routes dynamically,
-        // but Hono apps are immutable-ish in structure. 
-        // Better: Just test the error handler logic or add a route to main app if possible?
-        // Actually, we can just use the middleware directly or mount app.
-        // Let's rely on app.onError being propagated if we mount 'app' as sub-app, 
-        // BUT app.onError is app-specific.
-        
-        // Alternative: Mock the router or inject a route? 
-        // Easier: Just unit test the middleware function or create a fresh app instance with same middleware + bad route.
         const errorApp = new Hono();
-        // Import errorHandler directly
         const { errorHandler } = await import("../src/middleware/error-handler");
         errorApp.onError(errorHandler);
         errorApp.get("/fail", () => {
@@ -54,4 +37,24 @@ describe("Hono App Integration", () => {
             },
         });
     });
+
+    test("Error Handler catches generic unhandled Error", async () => {
+        const errorApp = new Hono();
+        const { errorHandler } = await import("../src/middleware/error-handler");
+        errorApp.onError(errorHandler);
+        errorApp.get("/crash", () => {
+            throw new Error("Unexpected crash");
+        });
+
+        const res = await errorApp.request("/crash");
+        expect(res.status).toBe(500);
+        const body = await res.json();
+        expect(body).toEqual({
+            error: {
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Internal Server Error",
+            },
+        });
+    });
 });
+
