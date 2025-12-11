@@ -39,4 +39,26 @@ const result = await executeDocAction(
 
 ## Error Handling
 
-Throws `UnknownActionError` (400) if the action key is invalid. Handlers should throw standard DomainErrors.
+
+## Internal HTTP Endpoint
+
+A single internal HTTP endpoint exposes these actions for inter-service communication.
+
+### `POST /internal/doc-actions`
+
+**Headers:**
+- `X-Workspace-Id` (required)
+- `X-XS-User-Id` (optional)
+
+**Body:**
+```json
+{
+  "actionKey": "docs.document.create",
+  "payload": { ... }
+}
+```
+
+**Response:**
+- `200/201`: Success (Action Result)
+- `400`: Validation Error / Unknown Action
+- `500`: Internal Server Error
