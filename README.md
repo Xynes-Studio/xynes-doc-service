@@ -10,6 +10,7 @@ Service responsible for managing document APIs in the Xynes platform.
 - **Language**: TypeScript
 - **Testing**: Bun Test (Aim for > 75% coverage)
 - **Linting**: ESLint + Prettier
+- **Migrations**: Drizzle Kit
 
 ## Structure
 
@@ -63,6 +64,17 @@ Run with coverage:
 ```sh
 bun test --coverage
 ```
+
+### Database & Migrations
+
+Run migrations to sync the schema:
+
+```sh
+bun run migrate
+```
+
+This applies changes from `src/infra/db/schema.ts` to the connected database.
+
 
 ### Linting
 
