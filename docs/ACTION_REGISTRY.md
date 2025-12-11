@@ -17,7 +17,11 @@ import { registerAction } from 'src/actions/registry';
 
 registerAction('docs.document.create', async (payload, ctx) => {
     // Implementation
-    return { id: '...' };
+    return { id: '...', title: '...', ... };
+});
+registerAction('docs.document.read', async (payload, ctx) => {
+  // Implementation
+  return { id: '...', ... };
 });
 ```
 
