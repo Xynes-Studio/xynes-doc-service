@@ -59,6 +59,60 @@ describe('Doc Actions Integration', () => {
     expect(read.status).toBe(payload.status);
   });
 
+  it('should update a document', async () => {
+    // Create first
+    const payload = { title: 'Old Title', type: 'page', content: { v: 1 } };
+    const ctx = { workspaceId, userId };
+    const created: any = await executeDocAction('docs.document.create', payload, ctx);
+    createdDocIds.push(created.id);
+
+    // Update
+    const updatePayload = {
+      id: created.id,
+      title: 'New Title',
+      content: { v: 2 },
+    };
+    const updated: any = await executeDocAction(
+      'docs.document.update',
+      updatePayload,
+      ctx,
+    );
+
+    expect(updated.title).toBe(updatePayload.title);
+    expect(updated.content).toEqual(updatePayload.content);
+
+    // Verify Read matches
+    const read: any = await executeDocAction('docs.document.read', { id: created.id }, ctx);
+    expect(read.title).toBe(updatePayload.title);
+    expect(read.content).toEqual(updatePayload.content);
+  });
+
+  it('should list documents by workspace', async () => {
+    // We have created some documents in `workspaceId` from previous tests
+    // Let's create one more to be sure
+    const payload = { title: 'List Me', type: 'list-item', content: {} };
+    const ctx = { workspaceId, userId };
+    const created: any = await executeDocAction('docs.document.create', payload, ctx);
+    createdDocIds.push(created.id);
+
+    // List
+    const listCtx = { workspaceId };
+    const list: any = await executeDocAction(
+      'docs.document.listByWorkspace',
+      { limit: 10 },
+      listCtx,
+    );
+
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.length).toBeGreaterThan(0);
+    
+    // Check fields
+    const doc = list.find((d: any) => d.id === created.id);
+    expect(doc).toBeDefined();
+    expect(doc.title).toBe(payload.title);
+    expect(doc.content).toBeUndefined(); // list should not return content
+  });
+
   it('should throw NotFoundError for wrong workspace', async () => {
     // Create in workspace 1
     const p1 = { title: 'Secret', type: 'page', content: {} };

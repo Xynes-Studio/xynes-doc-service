@@ -107,4 +107,20 @@ This service relies on:
 - `@xynes/errors`: For standard error classes.
 - `@xynes/contracts`: For shared types.
 
+## Actions
+
+### `docs.document.create`
+Creates a new document.
+
+### `docs.document.read`
+Reads a document by ID.
+
+### `docs.document.update`
+Updates a document's content and title.
+- Payload: `{ id: string, title?: string, content?: any }`
+
+### `docs.document.listByWorkspace`
+Lists documents for a workspace (paginated).
+- Payload: `{ limit?: number, offset?: number }`
+
 > Note: If running standalone without the monorepo, these are mocked in `src/libs/xynes`.
