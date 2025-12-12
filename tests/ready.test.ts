@@ -13,7 +13,10 @@ describe('Ready Endpoint', () => {
     checkMock.mockResolvedValueOnce(undefined);
 
     const app = new Hono();
-    app.get('/ready', createGetReady({ getDatabaseUrl: () => 'postgres://unused', check: checkMock }));
+    app.get(
+      '/ready',
+      createGetReady({ getDatabaseUrl: () => 'postgres://unused', check: checkMock }),
+    );
 
     const res = await app.request('/ready');
     expect(res.status).toBe(200);
@@ -25,12 +28,15 @@ describe('Ready Endpoint', () => {
     checkMock.mockRejectedValueOnce(new Error('db down'));
 
     const app = new Hono();
-    app.get('/ready', createGetReady({ getDatabaseUrl: () => 'postgres://unused', check: checkMock }));
+    app.get(
+      '/ready',
+      createGetReady({ getDatabaseUrl: () => 'postgres://unused', check: checkMock }),
+    );
 
     const res = await app.request('/ready');
     expect(res.status).toBe(503);
-    const body = await res.json() as any;
+    const body = (await res.json()) as any;
     expect(body.status).toBe('not_ready');
-    expect(body.error).toContain('db down');
+    expect(body.error).toBe('service not ready');
   });
 });
