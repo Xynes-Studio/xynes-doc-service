@@ -1,5 +1,4 @@
 import { describe, it, expect, mock } from 'bun:test';
-import { createDocumentHandler } from './createDocument';
 
 const mockInsert = mock(() => ({
   values: mock(() => ({
@@ -13,6 +12,7 @@ mock.module('../../infra/db', () => ({
   },
 }));
 
+const { createDocumentHandler } = await import('./createDocument');
 describe('createDocumentHandler', () => {
   it('creates a document and returns it', async () => {
     const createdAt = new Date();
