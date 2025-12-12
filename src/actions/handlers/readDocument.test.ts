@@ -1,5 +1,4 @@
 import { describe, it, expect, mock } from 'bun:test';
-import { readDocumentHandler } from './readDocument';
 import { NotFoundError } from '../errors';
 
 const mockSelect = mock(() => ({
@@ -13,6 +12,8 @@ mock.module('../../infra/db', () => ({
     select: mockSelect,
   },
 }));
+
+const { readDocumentHandler } = await import('./readDocument');
 
 describe('readDocumentHandler', () => {
   const ctx = { workspaceId: 'workspace-123', userId: 'user-123' };
