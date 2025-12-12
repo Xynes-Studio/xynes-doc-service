@@ -7,15 +7,17 @@ import { documents } from '../../infra/db/schema';
 
 export const listDocumentsByWorkspaceHandler: ActionHandler<
   z.infer<typeof listDocumentsPayloadSchema>,
-  Pick<typeof documents.$inferSelect, 'id' | 'title' | 'createdAt' | 'updatedAt'>[]
+  Pick<typeof documents.$inferSelect, 'id' | 'title' | 'status' | 'createdAt' | 'updatedAt'>[]
 > = async (payload, ctx) => {
+  const parsedPayload = listDocumentsPayloadSchema.parse(payload);
   const { workspaceId } = ctx;
-  const { limit = 20, offset = 0 } = payload;
+  const { limit, offset } = parsedPayload;
 
   const docs = await db
     .select({
       id: documents.id,
       title: documents.title,
+      status: documents.status,
       createdAt: documents.createdAt,
       updatedAt: documents.updatedAt,
     })

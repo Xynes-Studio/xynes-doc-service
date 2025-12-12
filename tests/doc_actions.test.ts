@@ -71,6 +71,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
       id: created.id,
       title: 'New Title',
       content: { v: 2 },
+      status: 'published',
     };
     const updated: any = await executeDocAction(
       'docs.document.update',
@@ -80,11 +81,13 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
 
     expect(updated.title).toBe(updatePayload.title);
     expect(updated.content).toEqual(updatePayload.content);
+    expect(updated.status).toBe(updatePayload.status);
 
     // Verify Read matches
     const read: any = await executeDocAction('docs.document.read', { id: created.id }, ctx);
     expect(read.title).toBe(updatePayload.title);
     expect(read.content).toEqual(updatePayload.content);
+    expect(read.status).toBe(updatePayload.status);
   });
 
   it('should list documents by workspace', async () => {
@@ -110,6 +113,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
     const doc = list.find((d: any) => d.id === created.id);
     expect(doc).toBeDefined();
     expect(doc.title).toBe(payload.title);
+    expect(doc.status).toBe('draft');
     expect(doc.content).toBeUndefined(); // list should not return content
   });
 

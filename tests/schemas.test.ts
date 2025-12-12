@@ -89,6 +89,7 @@ describe('updateDocumentPayloadSchema', () => {
     expect(result.id).toBe(payload.id);
     expect(result.title).toBe('New Title');
     expect(result.content).toBeUndefined();
+    expect(result.status).toBeUndefined();
   });
 
   it('should accept update with content only', () => {
@@ -112,6 +113,33 @@ describe('updateDocumentPayloadSchema', () => {
 
     expect(result.title).toBeNull();
   });
+
+  it('should accept update with status only', () => {
+    const payload = {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      status: 'published',
+    };
+
+    const result = updateDocumentPayloadSchema.parse(payload);
+    expect(result.status).toBe('published');
+  });
+
+  it('should reject update with only id', () => {
+    const payload = {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+    };
+
+    expect(() => updateDocumentPayloadSchema.parse(payload)).toThrow();
+  });
+
+  it('should reject invalid status', () => {
+    const payload = {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      status: 'archived',
+    };
+
+    expect(() => updateDocumentPayloadSchema.parse(payload)).toThrow();
+  });
 });
 
 describe('listDocumentsPayloadSchema', () => {
@@ -121,8 +149,8 @@ describe('listDocumentsPayloadSchema', () => {
     const result = listDocumentsPayloadSchema.parse(payload);
 
     // defaults are applied by the schema
-    expect(result.limit).toBeUndefined(); // optional, but default in schema
-    expect(result.offset).toBeUndefined();
+    expect(result.limit).toBe(20);
+    expect(result.offset).toBe(0);
   });
 
   it('should accept custom limit and offset', () => {

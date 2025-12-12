@@ -36,6 +36,12 @@ bun run test:integration         # Integration tests (requires Postgres)
 bun run test:integration:coverage
 ```
 
+Integration tests are gated behind `RUN_INTEGRATION_TESTS=true` to avoid accidental DB runs:
+
+```bash
+RUN_INTEGRATION_TESTS=true bun run test:integration
+```
+
 ### Environment
 
 - Scripts load `.env.dev` by default (Docker/dev). Override for host runs:
@@ -73,3 +79,16 @@ All responses use the platform standard envelope, **except for** `/health` and `
 | `UNKNOWN_ACTION` | 400 | Action key not registered |
 | `NOT_FOUND` | 404 | Document not found |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
+
+## Action Contracts
+
+The internal action registry is exposed via `POST /internal/doc-actions` and requires `X-Workspace-Id`.
+
+- `docs.document.update`
+  - Validates `id` and requires at least one of `title`, `content`, `status`
+  - Enforces workspace scoping via `ctx.workspaceId` (404 if not found in workspace)
+  - Updates `updatedAt` and returns the updated document
+
+- `docs.document.listByWorkspace`
+  - Uses `ctx.workspaceId`
+  - Returns a light DTO ordered by `createdAt DESC`: `id`, `title`, `status`, `createdAt`, `updatedAt`
