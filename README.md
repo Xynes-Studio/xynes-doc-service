@@ -122,11 +122,18 @@ Reads a document by ID.
 - **Payload**: `{ id: string }` (UUID)
 
 ### `docs.document.update`
-Updates a document's content and title.
+Updates a document (partial update).
 - **Payload**:
   - `id: string` - Document UUID (required)
   - `title?: string | null` - New title (optional, null to clear)
-  - `content?: any` - New content (optional)
+  - `content?: unknown` - New editor JSON (optional)
+  - `status?: "draft" | "published"` - New status (optional)
+
+- **Rules**:
+  - `id` is required
+  - at least one of `title`, `content`, `status` must be provided
+  - document must exist in `docs.documents` for `ctx.workspaceId` (404 otherwise)
+  - updates `updatedAt` and returns the updated document
 
 ### `docs.document.listByWorkspace`
 Lists documents for a workspace (paginated).
@@ -134,5 +141,7 @@ Lists documents for a workspace (paginated).
   - `limit?: number` - Items per page (default: `20`)
   - `offset?: number` - Pagination offset (default: `0`)
 
-> Note: If running standalone without the monorepo, libraries are mocked in `src/libs/xynes`.
+ - **Returns**: documents ordered by `createdAt DESC` with a light DTO:
+   - `id`, `title`, `status`, `createdAt`, `updatedAt`
 
+> Note: If running standalone without the monorepo, libraries are mocked in `src/libs/xynes`.

@@ -10,36 +10,38 @@ export const updateDocumentHandler: ActionHandler<
   z.infer<typeof updateDocumentPayloadSchema>,
   typeof documents.$inferSelect
 > = async (payload, ctx) => {
+  const parsedPayload = updateDocumentPayloadSchema.parse(payload);
   const { workspaceId, userId } = ctx;
 
-  const [existingDoc] = await db
-    .select()
-    .from(documents)
-    .where(and(eq(documents.id, payload.id), eq(documents.workspaceId, workspaceId)))
-    .limit(1);
-
-  if (!existingDoc) {
-    throw new NotFoundError('Document', payload.id);
-  }
-
   const updateValues: Partial<typeof documents.$inferInsert> = {
-    updatedBy: userId,
     updatedAt: new Date(),
   };
 
-  if (payload.title !== undefined) {
-    updateValues.title = payload.title;
+  if (userId) {
+    updateValues.updatedBy = userId;
   }
 
-  if (payload.content !== undefined) {
-    updateValues.content = payload.content;
+  if (parsedPayload.title !== undefined) {
+    updateValues.title = parsedPayload.title;
+  }
+
+  if (parsedPayload.content !== undefined) {
+    updateValues.content = parsedPayload.content as any;
+  }
+
+  if (parsedPayload.status !== undefined) {
+    updateValues.status = parsedPayload.status;
   }
 
   const [updatedDoc] = await db
     .update(documents)
     .set(updateValues)
-    .where(eq(documents.id, payload.id))
+    .where(and(eq(documents.id, parsedPayload.id), eq(documents.workspaceId, workspaceId)))
     .returning();
+
+  if (!updatedDoc) {
+    throw new NotFoundError('Document', parsedPayload.id);
+  }
 
   return updatedDoc;
 };
