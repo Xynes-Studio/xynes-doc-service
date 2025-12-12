@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { executeDocAction } from '../actions/execute';
-import { createDocumentPayloadSchema, readDocumentPayloadSchema } from '../actions/schemas';
+import {
+  createDocumentPayloadSchema,
+  readDocumentPayloadSchema,
+  updateDocumentPayloadSchema,
+  listDocumentsPayloadSchema,
+} from '../actions/schemas';
 import { DocActionKey } from '../actions/types';
 import { UnknownActionError } from '../actions/errors';
 import { logger } from '../infra/logger';
@@ -59,9 +64,8 @@ internalRoute.post('/doc-actions', async (c) => {
   try {
     let validatedPayload;
 
-    // Select schema based on actionKey
-    // We could move this mapping to the registry if it grows too large,
-    // but for now a switch/case is fine for 2 actions.
+    // Select schema based on actionKey for payload validation.
+    // All registered actions have corresponding schemas here.
     const key = actionKey as DocActionKey;
 
     switch (key) {
@@ -70,6 +74,12 @@ internalRoute.post('/doc-actions', async (c) => {
         break;
       case 'docs.document.read':
         validatedPayload = readDocumentPayloadSchema.parse(rawPayload);
+        break;
+      case 'docs.document.update':
+        validatedPayload = updateDocumentPayloadSchema.parse(rawPayload);
+        break;
+      case 'docs.document.listByWorkspace':
+        validatedPayload = listDocumentsPayloadSchema.parse(rawPayload);
         break;
       default:
         throw new UnknownActionError(actionKey);

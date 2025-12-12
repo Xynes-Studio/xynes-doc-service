@@ -29,13 +29,12 @@ describe('Hono App Integration', () => {
 
     const res = await errorApp.request('/fail');
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body).toEqual({
-      error: {
-        code: 'TEST_CODE',
-        message: 'Test Message',
-      },
-    });
+    const body: any = await res.json();
+    // New envelope format
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('TEST_CODE');
+    expect(body.error.message).toBe('Test Message');
+    expect(body.meta.requestId).toBeDefined();
   });
 
   test('Error Handler catches generic unhandled Error', async () => {
@@ -48,12 +47,11 @@ describe('Hono App Integration', () => {
 
     const res = await errorApp.request('/crash');
     expect(res.status).toBe(500);
-    const body = await res.json();
-    expect(body).toEqual({
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Internal Server Error',
-      },
-    });
+    const body: any = await res.json();
+    // New envelope format
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.message).toBe('Internal server error');
+    expect(body.meta.requestId).toBeDefined();
   });
 });

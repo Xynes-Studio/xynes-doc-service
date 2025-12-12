@@ -111,16 +111,28 @@ This service relies on:
 
 ### `docs.document.create`
 Creates a new document.
+- **Payload**:
+  - `title?: string` - Document title (optional)
+  - `type?: string` - Document type (default: `'doc'`)
+  - `content?: any` - Document content (default: `{}`)
+  - `status?: string` - Document status (default: `'draft'`)
 
 ### `docs.document.read`
 Reads a document by ID.
+- **Payload**: `{ id: string }` (UUID)
 
 ### `docs.document.update`
 Updates a document's content and title.
-- Payload: `{ id: string, title?: string, content?: any }`
+- **Payload**:
+  - `id: string` - Document UUID (required)
+  - `title?: string | null` - New title (optional, null to clear)
+  - `content?: any` - New content (optional)
 
 ### `docs.document.listByWorkspace`
 Lists documents for a workspace (paginated).
-- Payload: `{ limit?: number, offset?: number }`
+- **Payload**:
+  - `limit?: number` - Items per page (default: `20`)
+  - `offset?: number` - Pagination offset (default: `0`)
 
-> Note: If running standalone without the monorepo, these are mocked in `src/libs/xynes`.
+> Note: If running standalone without the monorepo, libraries are mocked in `src/libs/xynes`.
+

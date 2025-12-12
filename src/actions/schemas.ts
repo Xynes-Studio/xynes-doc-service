@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export const createDocumentPayloadSchema = z.object({
   title: z.string().optional(),
-  type: z.string(),
-  content: z.record(z.any()).or(z.array(z.any())).default({}),
-  status: z.string().default('draft').optional(),
+  type: z.string().default('doc'),
+  content: z.any().default({}),
+  status: z.string().optional().default('draft'),
 });
 
 export const readDocumentPayloadSchema = z.object({
@@ -13,7 +13,7 @@ export const readDocumentPayloadSchema = z.object({
 
 export const updateDocumentPayloadSchema = z.object({
   id: z.string().uuid(),
-  content: z.record(z.any()).or(z.array(z.any())).optional(),
+  content: z.any().optional(),
   title: z.string().optional().nullable(),
 });
 
