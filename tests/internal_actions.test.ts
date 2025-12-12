@@ -6,7 +6,7 @@ import { db } from '../src/infra/db';
 import { documents } from '../src/infra/db/schema';
 import { eq } from 'drizzle-orm';
 
-describe('Internal Doc Actions Endpoint', () => {
+describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Actions Endpoint', () => {
   beforeAll(() => {
     registerDocActions();
   });
@@ -160,10 +160,9 @@ describe('Internal Doc Actions Endpoint', () => {
         'X-Workspace-Id': workspaceId,
       },
       body: JSON.stringify({
-        actionKey: 'docs.document.create',
+        actionKey: 'docs.document.read',
         payload: {
-          // Missing required 'type'
-          title: 'Invalid Doc',
+          id: 'not-a-uuid',
         },
       }),
     });
@@ -181,4 +180,3 @@ describe('Internal Doc Actions Endpoint', () => {
     expect(response.meta?.requestId).toBeDefined();
   });
 });
-

@@ -1,5 +1,7 @@
 import { createEnv } from '@xynes/config';
 
+import { name } from '../../package.json';
+
 export const config = createEnv({
   server: {
     PORT: process.env.PORT || '3000',
@@ -9,4 +11,5 @@ export const config = createEnv({
   client: {},
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
+  serviceName: name,
 });
