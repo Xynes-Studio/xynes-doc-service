@@ -30,15 +30,17 @@ bun run dev
 ### Testing
 
 ```bash
-bun run test                # All tests (loads env file)
-bun run test:coverage       # With coverage
+bun run test                     # Unit tests (no DB)
+bun run test:coverage            # Unit tests + coverage
+bun run test:integration         # Integration tests (requires Postgres)
+bun run test:integration:coverage
 ```
 
 ### Environment
 
 - Scripts load `.env.dev` by default (Docker/dev). Override for host runs:
-  - `XYNES_ENV_FILE=.env.localhost bun run dev`
-  - `XYNES_ENV_FILE=.env.localhost bun run test`
+  - macOS/Linux (bash/zsh): `XYNES_ENV_FILE=.env.localhost bun run dev`
+  - Windows (PowerShell): `$env:XYNES_ENV_FILE=".env.localhost"; bun run dev`
 
 ## Routes
 

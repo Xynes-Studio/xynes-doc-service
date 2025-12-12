@@ -18,9 +18,11 @@
   },
   "scripts": {
     "migrate": "drizzle-kit migrate",
-    "dev": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" run --watch src/index.ts'",
-    "test": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" test'",
-    "test:coverage": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" test --coverage'",
+    "dev": "bun run scripts/run-with-env.ts run --watch src/index.ts",
+    "test": "bun run scripts/run-with-env.ts test",
+    "test:integration": "bun run scripts/run-with-env.ts test --integration",
+    "test:coverage": "bun run scripts/run-with-env.ts test --coverage",
+    "test:integration:coverage": "bun run scripts/run-with-env.ts test --integration --coverage",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix"
   },

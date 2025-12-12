@@ -6,7 +6,7 @@ import { db } from '../src/infra/db';
 import { documents } from '../src/infra/db/schema';
 import { eq } from 'drizzle-orm';
 
-describe('Internal Doc Actions Endpoint', () => {
+describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Actions Endpoint', () => {
   beforeAll(() => {
     registerDocActions();
   });

@@ -7,7 +7,7 @@ import { documents } from '../src/infra/db/schema';
 import { eq } from 'drizzle-orm';
 import { NotFoundError } from '../src/actions/errors';
 
-describe('Doc Actions Integration', () => {
+describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integration', () => {
   beforeAll(() => {
     registerDocActions();
   });

@@ -10,7 +10,7 @@ const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString);
 const db = drizzle(client);
 
-describe('Database Integration', () => {
+describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Database Integration', () => {
   it('should connect to the database', async () => {
     const result = await client`SELECT 1 as res`;
     expect(result).toBeDefined();
