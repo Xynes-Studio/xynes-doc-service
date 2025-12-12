@@ -47,7 +47,12 @@ describe('Internal Doc Actions Endpoint', () => {
     const res = await app.fetch(req);
     expect(res.status).toBe(201);
 
-    const data: any = await res.json();
+    const response: any = await res.json();
+    // New envelope format
+    expect(response.ok).toBe(true);
+    expect(response.meta?.requestId).toBeDefined();
+    
+    const data = response.data;
     expect(data.id).toBeDefined();
     expect(data.title).toBe(payload.title);
     expect(data.workspaceId).toBe(workspaceId);
@@ -72,7 +77,8 @@ describe('Internal Doc Actions Endpoint', () => {
       }),
     });
     const createRes = await app.fetch(createReq);
-    const created: any = await createRes.json();
+    const createResponse: any = await createRes.json();
+    const created = createResponse.data;
     createdDocIds.push(created.id);
 
     // Read
@@ -91,8 +97,13 @@ describe('Internal Doc Actions Endpoint', () => {
 
     const readRes = await app.fetch(readReq);
     expect(readRes.status).toBe(200);
-    const readData: any = await readRes.json();
+    const readResponse: any = await readRes.json();
 
+    // New envelope format
+    expect(readResponse.ok).toBe(true);
+    expect(readResponse.meta?.requestId).toBeDefined();
+
+    const readData = readResponse.data;
     expect(readData.id).toBe(created.id);
     expect(readData.title).toBe(createPayload.title);
   });
@@ -110,8 +121,12 @@ describe('Internal Doc Actions Endpoint', () => {
     });
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
-    const data: any = await res.json();
-    expect(data.error.code).toBe('MISSING_HEADER');
+    const response: any = await res.json();
+    
+    // New envelope format
+    expect(response.ok).toBe(false);
+    expect(response.error.code).toBe('MISSING_HEADER');
+    expect(response.meta?.requestId).toBeDefined();
   });
 
   it('should return 400 for unknown actionKey', async () => {
@@ -126,16 +141,15 @@ describe('Internal Doc Actions Endpoint', () => {
         payload: {},
       }),
     });
-    // The mock usage of app.fetch will let the error bubble?
-    // Wait, Hono app.onError should catch it.
-    // But in our implementation we RE-THREW validation errors? No, we re-threw everything NOT ZodError.
-    // UnknownActionError has a statusCode = 400.
-    // app.ts has `app.onError(errorHandler)` which handles `DomainError`.
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
-    const data: any = await res.json();
-    expect(data.error.code).toBe('UNKNOWN_ACTION');
+    const response: any = await res.json();
+    
+    // New envelope format
+    expect(response.ok).toBe(false);
+    expect(response.error.code).toBe('UNKNOWN_ACTION');
+    expect(response.meta?.requestId).toBeDefined();
   });
 
   it('should return 400 for payload validation error', async () => {
@@ -156,7 +170,15 @@ describe('Internal Doc Actions Endpoint', () => {
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
-    const data: any = await res.json();
-    expect(data.error.code).toBe('VALIDATION_ERROR');
+    const response: any = await res.json();
+    
+    // New envelope format with field-level details
+    expect(response.ok).toBe(false);
+    expect(response.error.code).toBe('VALIDATION_ERROR');
+    expect(response.error.message).toBe('Payload validation failed');
+    expect(response.error.details?.issues).toBeDefined();
+    expect(response.error.details.issues.length).toBeGreaterThan(0);
+    expect(response.meta?.requestId).toBeDefined();
   });
 });
+

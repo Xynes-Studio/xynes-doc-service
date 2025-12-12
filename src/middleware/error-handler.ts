@@ -1,29 +1,33 @@
 import { Context } from 'hono';
 import { DomainError } from '@xynes/errors';
+import { createErrorResponse, ApiErrorDetails } from '@xynes/envelope';
 import { logger } from '../infra/logger';
 
+/**
+ * Generates a unique request ID for error correlation.
+ */
+function generateRequestId(): string {
+  return `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export const errorHandler = async (err: Error, c: Context) => {
+  // Get or generate request ID for correlation
+  const requestId = c.get('requestId') || generateRequestId();
+
   if (err instanceof DomainError) {
-    logger.warn(`DomainError: ${err.message}`, { code: err.code });
+    logger.warn(`DomainError: ${err.message}`, { code: err.code, requestId });
+
     return c.json(
-      {
-        error: {
-          code: err.code,
-          message: err.message,
-        },
-      },
+      createErrorResponse(
+        err.code,
+        err.message,
+        requestId,
+        err.details ? (err.details as ApiErrorDetails) : undefined,
+      ),
       (err.statusCode || 400) as any,
     );
   }
 
-  logger.error(`Unhandled Error: ${err.message}`, err);
-  return c.json(
-    {
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Internal Server Error',
-      },
-    },
-    500,
-  );
+  logger.error(`Unhandled Error: ${err.message}`, { requestId, error: err });
+  return c.json(createErrorResponse('INTERNAL_ERROR', 'Internal server error', requestId), 500);
 };
