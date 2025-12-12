@@ -9,7 +9,7 @@ export type ReadyDependencies = {
 };
 
 export function createGetReady({
-  getDatabaseUrl = () => process.env.DATABASE_URL ?? config.server.DATABASE_URL,
+  getDatabaseUrl = () => config.server.DATABASE_URL,
   check = checkPostgresReadiness,
   schemaName = 'docs',
 }: ReadyDependencies = {}) {

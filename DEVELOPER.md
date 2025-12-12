@@ -47,7 +47,7 @@ bun run test:coverage       # With coverage
 
 ## Standard Response Envelope
 
-All responses use the platform standard envelope:
+All responses use the platform standard envelope, **except for** `/health` and `/ready` which follow a simplified format for infrastructure checks.
 
 **Success**:
 ```json
