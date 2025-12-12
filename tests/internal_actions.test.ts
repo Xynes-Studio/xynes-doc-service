@@ -160,10 +160,9 @@ describe('Internal Doc Actions Endpoint', () => {
         'X-Workspace-Id': workspaceId,
       },
       body: JSON.stringify({
-        actionKey: 'docs.document.create',
+        actionKey: 'docs.document.read',
         payload: {
-          // Missing required 'type'
-          title: 'Invalid Doc',
+          id: 'not-a-uuid',
         },
       }),
     });
@@ -181,4 +180,3 @@ describe('Internal Doc Actions Endpoint', () => {
     expect(response.meta?.requestId).toBeDefined();
   });
 });
-

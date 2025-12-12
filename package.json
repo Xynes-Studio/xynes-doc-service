@@ -18,8 +18,9 @@
   },
   "scripts": {
     "migrate": "drizzle-kit migrate",
-    "dev": "bun --env-file=.env.localhost run --watch src/index.ts",
-    "test": "bun --env-file=.env.localhost test",
+    "dev": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" run --watch src/index.ts'",
+    "test": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" test'",
+    "test:coverage": "sh -c 'bun --env-file=\"${XYNES_ENV_FILE:-.env.dev}\" test --coverage'",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix"
   },

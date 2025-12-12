@@ -1,5 +1,5 @@
 import { Context } from 'hono';
 
 export const getHealth = (c: Context) => {
-  return c.json({ status: 'ok' });
+  return c.json({ status: 'ok', service: 'xynes-doc-service' });
 };

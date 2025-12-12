@@ -30,9 +30,20 @@ bun run dev
 ### Testing
 
 ```bash
-bun test                    # All tests
-bun test --coverage         # With coverage
+bun run test                # All tests (loads env file)
+bun run test:coverage       # With coverage
 ```
+
+### Environment
+
+- Scripts load `.env.dev` by default (Docker/dev). Override for host runs:
+  - `XYNES_ENV_FILE=.env.localhost bun run dev`
+  - `XYNES_ENV_FILE=.env.localhost bun run test`
+
+## Routes
+
+- `GET /health`: Liveness check. Returns `{ "status": "ok", "service": "xynes-doc-service" }`.
+- `GET /ready`: Readiness check. Runs a fast Postgres check and returns `{ "status": "ready" }` (or 503 with error).
 
 ## Standard Response Envelope
 
