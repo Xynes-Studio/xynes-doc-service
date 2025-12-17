@@ -15,8 +15,10 @@ import {
   createErrorResponse,
   createValidationErrorResponse,
 } from '@xynes/envelope';
+import { requireInternalServiceAuth } from '../middleware/internal-service-auth';
 
 const internalRoute = new Hono();
+internalRoute.use('*', requireInternalServiceAuth());
 
 const actionRequestSchema = z.object({
   actionKey: z.string(),
