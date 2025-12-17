@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../src/infra/db';
 import { documents } from '../src/infra/db/schema';
 import { eq } from 'drizzle-orm';
+import { INTERNAL_SERVICE_TOKEN } from './support/internal-auth';
 
 describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Actions Endpoint', () => {
   beforeAll(() => {
@@ -35,6 +36,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -68,6 +70,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -86,6 +89,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -115,6 +119,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -134,6 +139,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -160,6 +166,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
       },
       body: JSON.stringify({
@@ -184,6 +191,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -203,6 +211,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': otherWorkspaceId,
         'X-XS-User-Id': userId,
       },
@@ -228,6 +237,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -246,6 +256,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
         'X-XS-User-Id': userId,
       },
@@ -264,6 +275,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': otherWorkspaceId,
         'X-XS-User-Id': userId,
       },
@@ -281,6 +293,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
       },
       body: JSON.stringify({
@@ -305,6 +318,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': workspaceId,
       },
       body: JSON.stringify({

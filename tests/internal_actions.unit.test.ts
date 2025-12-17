@@ -1,11 +1,47 @@
 import { describe, it, expect } from 'bun:test';
 import app from '../src/app';
 
+import { INTERNAL_SERVICE_TOKEN } from './support/internal-auth';
+
 describe('Internal Doc Actions Endpoint (Unit)', () => {
+  it('returns 401 for missing X-Internal-Service-Token', async () => {
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000' },
+      body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(401);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns 403 for mismatched X-Internal-Service-Token', async () => {
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Service-Token': 'wrong-token',
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
+      body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(403);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('FORBIDDEN');
+  });
+
   it('returns 400 for missing X-Workspace-Id', async () => {
     const req = new Request('http://localhost/internal/doc-actions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN },
       body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
     });
 
@@ -23,6 +59,7 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
       },
       body: JSON.stringify({ notActionKey: true }),
@@ -43,6 +80,7 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
       },
       body: JSON.stringify({ actionKey: 'docs.unknown.action', payload: {} }),
@@ -62,6 +100,7 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
         'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
       },
       body: JSON.stringify({
@@ -81,4 +120,3 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
     expect(body.meta?.requestId).toBeDefined();
   });
 });
-

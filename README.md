@@ -99,6 +99,7 @@ Copy `.env.example` to `.env` (creates automatically if using `bun init` or manu
 | PORT | Server Port | 3000 |
 | DATABASE_URL | Postgres Connection String | postgres://localhost:5432/xynes_docs |
 | NODE_ENV | Environment | development |
+| INTERNAL_SERVICE_TOKEN | Shared secret required for `/internal/*` endpoints | (required) |
 
 ## Shared Libraries
 
