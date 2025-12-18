@@ -25,6 +25,7 @@ src/
 └── infra/
     ├── config.ts          # Environment configuration
     ├── logger.ts          # Structured logging
+    ├── http/              # HTTP helpers (body parsing, requestId)
     └── db/                # Database connection & Schema
 ```
 
@@ -99,6 +100,7 @@ Copy `.env.example` to `.env` (creates automatically if using `bun init` or manu
 | PORT | Server Port | 3000 |
 | DATABASE_URL | Postgres Connection String | postgres://localhost:5432/xynes_docs |
 | NODE_ENV | Environment | development |
+| MAX_JSON_BODY_BYTES | Max JSON request body size (bytes) | 1048576 |
 | INTERNAL_SERVICE_TOKEN | Shared secret required for `/internal/*` endpoints | (required) |
 
 ## Shared Libraries
@@ -115,8 +117,8 @@ Creates a new document.
 - **Payload**:
   - `title?: string` - Document title (optional)
   - `type?: string` - Document type (default: `'doc'`)
-  - `content?: any` - Document content (default: `{}`)
-  - `status?: string` - Document status (default: `'draft'`)
+  - `content?: object | any[]` - Document editor JSON (default: `{}`)
+  - `status?: "draft" | "published"` - Document status (default: `'draft'`)
 
 ### `docs.document.read`
 Reads a document by ID.
@@ -127,7 +129,7 @@ Updates a document (partial update).
 - **Payload**:
   - `id: string` - Document UUID (required)
   - `title?: string | null` - New title (optional, null to clear)
-  - `content?: unknown` - New editor JSON (optional)
+  - `content?: object | any[]` - New editor JSON (optional)
   - `status?: "draft" | "published"` - New status (optional)
 
 - **Rules**:

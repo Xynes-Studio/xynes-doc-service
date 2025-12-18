@@ -119,4 +119,96 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
     expect(body.error.details?.issues).toBeDefined();
     expect(body.meta?.requestId).toBeDefined();
   });
+
+  it('returns 400 when create payload contains invalid status', async () => {
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
+      body: JSON.stringify({
+        actionKey: 'docs.document.create',
+        payload: { title: 'Bad', content: {}, status: 'archived' },
+      }),
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(400);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.error.message).toBe('Payload validation failed');
+    expect(body.meta?.requestId).toBeDefined();
+  });
+
+  it('returns 400 when create payload contains primitive content', async () => {
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
+      body: JSON.stringify({
+        actionKey: 'docs.document.create',
+        payload: { title: 'Bad', content: 'nope' },
+      }),
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(400);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.error.message).toBe('Payload validation failed');
+    expect(body.meta?.requestId).toBeDefined();
+  });
+
+  it('returns 413 when request body exceeds configured limit', async () => {
+    const tooLarge = 'a'.repeat(1024 * 1024 + 2048);
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
+      body: JSON.stringify({
+        actionKey: 'docs.document.create',
+        payload: { title: 'Big', content: { text: tooLarge } },
+      }),
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(413);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('PAYLOAD_TOO_LARGE');
+    expect(body.meta?.requestId).toBeDefined();
+  });
+
+  it('returns 400 for invalid JSON body', async () => {
+    const req = new Request('http://localhost/internal/doc-actions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
+      body: '{ definitely-not-json ',
+    });
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(400);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('INVALID_JSON');
+    expect(body.meta?.requestId).toBeDefined();
+  });
 });

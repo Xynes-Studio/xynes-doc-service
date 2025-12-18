@@ -10,8 +10,9 @@ export const readDocumentHandler: ActionHandler<
   z.infer<typeof readDocumentPayloadSchema>,
   typeof documents.$inferSelect
 > = async (payload, ctx) => {
+  const parsedPayload = readDocumentPayloadSchema.parse(payload);
   const { workspaceId } = ctx;
-  const { id } = payload;
+  const { id } = parsedPayload;
 
   const [doc] = await db
     .select()

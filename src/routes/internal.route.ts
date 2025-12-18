@@ -16,6 +16,9 @@ import {
   createValidationErrorResponse,
 } from '@xynes/envelope';
 import { requireInternalServiceAuth } from '../middleware/internal-service-auth';
+import { config } from '../infra/config';
+import { parseJsonBodyWithLimit } from '../infra/http/parse-json-body';
+import { generateRequestId } from '../infra/http/request-id';
 
 const internalRoute = new Hono();
 internalRoute.use('*', requireInternalServiceAuth());
@@ -25,15 +28,9 @@ const actionRequestSchema = z.object({
   payload: z.unknown(),
 });
 
-/**
- * Generates a unique request ID for error correlation.
- */
-function generateRequestId(): string {
-  return `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
 internalRoute.post('/doc-actions', async (c) => {
-  const requestId = generateRequestId();
+  const requestId = c.get('requestId') || generateRequestId();
+  c.set('requestId', requestId);
   const workspaceId = c.req.header('X-Workspace-Id');
   const userId = c.req.header('X-XS-User-Id');
 
@@ -44,7 +41,8 @@ internalRoute.post('/doc-actions', async (c) => {
     );
   }
 
-  const body = await c.req.json();
+  const maxBytes = Number.parseInt(config.server.MAX_JSON_BODY_BYTES, 10) || 1048576;
+  const body = await parseJsonBodyWithLimit(c.req.raw, maxBytes);
   const result = actionRequestSchema.safeParse(body);
 
   if (!result.success) {

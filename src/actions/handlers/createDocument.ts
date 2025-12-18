@@ -8,16 +8,17 @@ export const createDocumentHandler: ActionHandler<
   z.infer<typeof createDocumentPayloadSchema>,
   typeof documents.$inferSelect
 > = async (payload, ctx) => {
+  const parsedPayload = createDocumentPayloadSchema.parse(payload);
   const { workspaceId, userId } = ctx;
 
   const [doc] = await db
     .insert(documents)
     .values({
       workspaceId,
-      type: payload.type,
-      title: payload.title,
-      content: payload.content,
-      status: payload.status as 'draft' | 'published' | 'archived', // Type casting if needed or handle schema better
+      type: parsedPayload.type,
+      title: parsedPayload.title,
+      content: parsedPayload.content,
+      status: parsedPayload.status,
       createdBy: userId,
       updatedBy: userId,
     })
