@@ -50,8 +50,18 @@ describe('createDocumentPayloadSchema', () => {
 
     const result = createDocumentPayloadSchema.parse(payload);
 
-    // z.any() accepts any value
     expect(result.content).toEqual([{ type: 'text', value: 'hello' }]);
+  });
+
+  it('should reject primitive content', () => {
+    expect(() => createDocumentPayloadSchema.parse({ content: 'nope' })).toThrow();
+    expect(() => createDocumentPayloadSchema.parse({ content: 123 })).toThrow();
+    expect(() => createDocumentPayloadSchema.parse({ content: true })).toThrow();
+    expect(() => createDocumentPayloadSchema.parse({ content: null })).toThrow();
+  });
+
+  it('should reject invalid status', () => {
+    expect(() => createDocumentPayloadSchema.parse({ status: 'archived' })).toThrow();
   });
 });
 
@@ -101,6 +111,15 @@ describe('updateDocumentPayloadSchema', () => {
     const result = updateDocumentPayloadSchema.parse(payload);
 
     expect(result.content).toEqual({ foo: 'bar' });
+  });
+
+  it('should reject primitive content', () => {
+    expect(() =>
+      updateDocumentPayloadSchema.parse({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        content: 'nope',
+      }),
+    ).toThrow();
   });
 
   it('should allow null title to clear it', () => {

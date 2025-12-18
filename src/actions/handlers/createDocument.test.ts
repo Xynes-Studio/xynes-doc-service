@@ -1,4 +1,5 @@
 import { describe, it, expect, mock } from 'bun:test';
+import { ZodError } from 'zod';
 
 const mockInsert = mock(() => ({
   values: mock(() => ({
@@ -55,5 +56,22 @@ describe('createDocumentHandler', () => {
 
     const result = await createDocumentHandler(payload as any, ctx);
     expect(result).toEqual(expected);
+  });
+
+  it('rejects invalid status before writing', async () => {
+    const ctx = {
+      workspaceId: 'workspace-123',
+      userId: 'user-123',
+    };
+
+    try {
+      await createDocumentHandler(
+        { title: 'Bad', type: 'page', content: {}, status: 'archived' } as any,
+        ctx,
+      );
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeInstanceOf(ZodError);
+    }
   });
 });

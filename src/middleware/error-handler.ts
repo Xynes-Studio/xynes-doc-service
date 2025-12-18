@@ -2,13 +2,7 @@ import { Context } from 'hono';
 import { DomainError } from '@xynes/errors';
 import { createErrorResponse, ApiErrorDetails } from '@xynes/envelope';
 import { logger } from '../infra/logger';
-
-/**
- * Generates a unique request ID for error correlation.
- */
-function generateRequestId(): string {
-  return `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
+import { generateRequestId } from '../infra/http/request-id';
 
 export const errorHandler = async (err: Error, c: Context) => {
   // Get or generate request ID for correlation

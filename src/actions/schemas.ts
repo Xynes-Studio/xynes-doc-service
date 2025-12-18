@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
+export const documentStatusSchema = z.enum(['draft', 'published']);
+
+// Accept common rich-text editor JSON shapes without allowing arbitrary primitives.
+export const documentContentSchema = z.union([z.object({}).passthrough(), z.array(z.unknown())]);
+
 export const createDocumentPayloadSchema = z.object({
   title: z.string().optional(),
   type: z.string().default('doc'),
-  content: z.any().default({}),
-  status: z.string().optional().default('draft'),
+  content: documentContentSchema.default({}),
+  status: documentStatusSchema.default('draft'),
 });
 
 export const readDocumentPayloadSchema = z.object({
@@ -15,8 +20,8 @@ export const updateDocumentPayloadSchema = z
   .object({
     id: z.string().uuid(),
     title: z.string().optional().nullable(),
-    content: z.unknown().optional(),
-    status: z.enum(['draft', 'published']).optional(),
+    content: documentContentSchema.optional(),
+    status: documentStatusSchema.optional(),
   })
   .refine(
     (data) => data.title !== undefined || data.content !== undefined || data.status !== undefined,

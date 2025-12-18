@@ -39,6 +39,8 @@ const result = await executeDocAction(
 
 ## Error Handling
 
+Errors are returned using the platform response envelope. In addition to action-level validation,
+the internal HTTP endpoint enforces a maximum JSON request size (returns `413` for oversized bodies).
 
 ## Internal HTTP Endpoint
 
@@ -61,4 +63,5 @@ A single internal HTTP endpoint exposes these actions for inter-service communic
 **Response:**
 - `200/201`: Success (Action Result)
 - `400`: Validation Error / Unknown Action
+- `413`: Payload Too Large
 - `500`: Internal Server Error

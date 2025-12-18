@@ -2,10 +2,7 @@ import type { Context, Next } from 'hono';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createErrorResponse } from '@xynes/envelope';
 import { logger } from '../infra/logger';
-
-function generateRequestId(): string {
-  return `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
+import { generateRequestId } from '../infra/http/request-id';
 
 function tokensMatch(provided: string, expected: string): boolean {
   const key = Buffer.from(expected);
@@ -17,6 +14,7 @@ function tokensMatch(provided: string, expected: string): boolean {
 export function requireInternalServiceAuth() {
   return async (c: Context, next: Next) => {
     const requestId = c.get('requestId') || generateRequestId();
+    c.set('requestId', requestId);
     const expected = process.env.INTERNAL_SERVICE_TOKEN;
 
     if (!expected) {

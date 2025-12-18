@@ -19,6 +19,7 @@ The Document Service is built using Bun and Hono. It manages documents for the p
 - **Folder Structure**: Feature-based separation in `src/`
 - **Testing**: TDD mandatory. 75%+ coverage. Use `bun test`
 - **Linting**: Run `bun run lint` before commits
+- **Security**: Validate all inputs, cap request sizes, never log secrets
 
 ### Setup
 
@@ -47,6 +48,15 @@ RUN_INTEGRATION_TESTS=true bun run test:integration
 - Scripts load `.env.dev` by default (Docker/dev). Override for host runs:
   - macOS/Linux (bash/zsh): `XYNES_ENV_FILE=.env.localhost bun run dev`
   - Windows (PowerShell): `$env:XYNES_ENV_FILE=".env.localhost"; bun run dev`
+- JSON request bodies for `POST /internal/doc-actions` are capped by `MAX_JSON_BODY_BYTES` (default: `1048576`).
+
+### Local DB (SSH Tunnel)
+
+For any database-related work against the remote host, use an SSH tunnel:
+
+```bash
+ssh -N -L 5432:127.0.0.1:5432 xynes@84.247.176.134
+```
 
 ## Routes
 
