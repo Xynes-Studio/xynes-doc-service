@@ -110,17 +110,18 @@ describe('AuthzClient (Unit)', () => {
       expect(result.allowed).toBe(false);
     });
 
-    it('should return allowed=false when fetch throws', async () => {
+    it('should throw when fetch throws (network error)', async () => {
       global.fetch = mock(() => Promise.reject(new Error('Network error'))) as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
-      const result = await client.check({
-        userId: 'user-123',
-        workspaceId: 'ws-456',
-        actionKey: 'docs.document.create',
-      });
 
-      expect(result.allowed).toBe(false);
+      await expect(
+        client.check({
+          userId: 'user-123',
+          workspaceId: 'ws-456',
+          actionKey: 'docs.document.create',
+        }),
+      ).rejects.toThrow('Network error');
     });
 
     it('should return allowed=false when response is not valid JSON', async () => {

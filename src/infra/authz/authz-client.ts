@@ -97,8 +97,8 @@ export class AuthzClient implements IAuthzClient {
         workspaceId,
         actionKey,
       });
-      // Fail closed - deny access on error
-      return { allowed: false };
+      // Re-throw to let caller handle - fail-closed at route level
+      throw error;
     }
   }
 }
