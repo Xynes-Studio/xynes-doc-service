@@ -16,7 +16,7 @@ mock.module('../../infra/db', () => ({
 const { readDocumentHandler } = await import('./readDocument');
 
 describe('readDocumentHandler', () => {
-  const ctx = { workspaceId: 'workspace-123', userId: 'user-123' };
+  const ctx = { workspaceId: 'workspace-123', userId: 'user-123', requestId: 'test-req-123' };
 
   it('returns the document when found', async () => {
     const docId = '550e8400-e29b-41d4-a716-446655440000';

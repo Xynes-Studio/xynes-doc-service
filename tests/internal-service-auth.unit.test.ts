@@ -1,12 +1,23 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { Hono } from "hono";
 import { requireInternalServiceAuth } from "../src/middleware/internal-service-auth";
 
 describe("requireInternalServiceAuth (unit)", () => {
   const token = "unit-test-token";
+  let originalToken: string | undefined;
 
   beforeEach(() => {
+    originalToken = process.env.INTERNAL_SERVICE_TOKEN;
     process.env.INTERNAL_SERVICE_TOKEN = token;
+  });
+
+  afterEach(() => {
+    // Restore original token to avoid affecting other tests
+    if (originalToken !== undefined) {
+      process.env.INTERNAL_SERVICE_TOKEN = originalToken;
+    } else {
+      delete process.env.INTERNAL_SERVICE_TOKEN;
+    }
   });
 
   it("returns 401 when header missing and does not run handler", async () => {

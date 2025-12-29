@@ -7,6 +7,7 @@ export type DocActionKey =
 export interface ActionContext {
   workspaceId: string;
   userId?: string;
+  requestId: string;
 }
 
 export type ActionHandler<Payload, Result> = (
