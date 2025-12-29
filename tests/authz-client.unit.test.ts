@@ -125,6 +125,54 @@ describe('AuthzClient (Unit)', () => {
       ).rejects.toThrow('Network error');
     });
 
+    it('should throw timeout error when request takes too long', async () => {
+      // Create a fetch that simulates a slow response by never resolving
+      global.fetch = mock(
+        (_input: RequestInfo | URL, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            // Listen for abort signal
+            if (init?.signal) {
+              init.signal.addEventListener('abort', () => {
+                const error = new Error('The operation was aborted');
+                error.name = 'AbortError';
+                reject(error);
+              });
+            }
+          }),
+      ) as typeof fetch;
+
+      // Use a very short timeout for testing
+      const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN, 50);
+
+      await expect(
+        client.check({
+          userId: 'user-123',
+          workspaceId: 'ws-456',
+          actionKey: 'docs.document.create',
+        }),
+      ).rejects.toThrow('Authz service request timed out after 50ms');
+    });
+
+    it('should use custom timeout when provided', async () => {
+      global.fetch = mock(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ allowed: true }), {
+            status: 200,
+          }),
+        ),
+      ) as typeof fetch;
+
+      // Create client with custom timeout
+      const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN, 10000);
+      const result = await client.check({
+        userId: 'user-123',
+        workspaceId: 'ws-456',
+        actionKey: 'docs.document.create',
+      });
+
+      expect(result.allowed).toBe(true);
+    });
+
     it('should throw when response is not valid JSON', async () => {
       global.fetch = mock(() =>
         Promise.resolve(

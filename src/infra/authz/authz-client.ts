@@ -21,13 +21,27 @@ export interface IAuthzClient {
   check(params: AuthzCheckParams): Promise<AuthzCheckResult>;
 }
 
+/** Default timeout for authz service requests in milliseconds */
+const DEFAULT_AUTHZ_TIMEOUT_MS = 5000;
+
+/**
+ * Creates an anonymized identifier for logging purposes.
+ * Uses first 8 characters to allow correlation without exposing full PII.
+ */
+function anonymize(value: string | undefined): string {
+  if (!value) return 'none';
+  return value.slice(0, 8) + '...';
+}
+
 export class AuthzClient implements IAuthzClient {
   private authzUrl: string;
   private internalServiceToken: string;
+  private timeoutMs: number;
 
-  constructor(authzUrl: string, internalServiceToken: string) {
+  constructor(authzUrl: string, internalServiceToken: string, timeoutMs?: number) {
     this.authzUrl = authzUrl;
     this.internalServiceToken = internalServiceToken;
+    this.timeoutMs = timeoutMs ?? DEFAULT_AUTHZ_TIMEOUT_MS;
   }
 
   private static extractAllowed(value: unknown): boolean | null {
@@ -56,6 +70,11 @@ export class AuthzClient implements IAuthzClient {
 
   async check(params: AuthzCheckParams): Promise<AuthzCheckResult> {
     const { userId, workspaceId, actionKey } = params;
+    const anonUserId = anonymize(userId);
+    const anonWorkspaceId = anonymize(workspaceId);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
       const response = await fetch(`${this.authzUrl}/authz/check`, {
@@ -65,14 +84,15 @@ export class AuthzClient implements IAuthzClient {
           'X-Internal-Service-Token': this.internalServiceToken,
         },
         body: JSON.stringify({ userId, workspaceId, actionKey }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
         logger.error('[AuthzClient] Authz service returned non-OK status', {
           status: response.status,
-          userId,
-          workspaceId,
           actionKey,
+          anonUserId,
+          anonWorkspaceId,
         });
         throw new Error(`Authz service returned non-OK status: ${response.status}`);
       }
@@ -82,23 +102,36 @@ export class AuthzClient implements IAuthzClient {
 
       if (allowed === null) {
         logger.error('[AuthzClient] Could not extract allowed from response', {
-          userId,
-          workspaceId,
           actionKey,
+          anonUserId,
+          anonWorkspaceId,
         });
         throw new Error('Invalid response format from authz service');
       }
 
       return { allowed };
     } catch (error) {
+      // Handle abort/timeout specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        logger.error('[AuthzClient] Authz check timed out', {
+          actionKey,
+          anonUserId,
+          anonWorkspaceId,
+          timeoutMs: this.timeoutMs,
+        });
+        throw new Error(`Authz service request timed out after ${this.timeoutMs}ms`);
+      }
+
       logger.error('[AuthzClient] Authz check failed', {
         error: (error as Error).message,
-        userId,
-        workspaceId,
         actionKey,
+        anonUserId,
+        anonWorkspaceId,
       });
       // Re-throw to let caller handle - fail-closed at route level
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 }
