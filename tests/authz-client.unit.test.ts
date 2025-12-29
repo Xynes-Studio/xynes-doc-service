@@ -91,7 +91,7 @@ describe('AuthzClient (Unit)', () => {
       expect(result.allowed).toBe(false);
     });
 
-    it('should return allowed=false when authz service returns non-OK status', async () => {
+    it('should throw when authz service returns non-OK status', async () => {
       global.fetch = mock(() =>
         Promise.resolve(
           new Response(JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR' } }), {
@@ -101,13 +101,14 @@ describe('AuthzClient (Unit)', () => {
       ) as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
-      const result = await client.check({
-        userId: 'user-123',
-        workspaceId: 'ws-456',
-        actionKey: 'docs.document.create',
-      });
 
-      expect(result.allowed).toBe(false);
+      await expect(
+        client.check({
+          userId: 'user-123',
+          workspaceId: 'ws-456',
+          actionKey: 'docs.document.create',
+        }),
+      ).rejects.toThrow('Authz service returned non-OK status: 500');
     });
 
     it('should throw when fetch throws (network error)', async () => {
@@ -124,7 +125,7 @@ describe('AuthzClient (Unit)', () => {
       ).rejects.toThrow('Network error');
     });
 
-    it('should return allowed=false when response is not valid JSON', async () => {
+    it('should throw when response is not valid JSON', async () => {
       global.fetch = mock(() =>
         Promise.resolve(
           new Response('not json', {
@@ -134,13 +135,14 @@ describe('AuthzClient (Unit)', () => {
       ) as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
-      const result = await client.check({
-        userId: 'user-123',
-        workspaceId: 'ws-456',
-        actionKey: 'docs.document.create',
-      });
 
-      expect(result.allowed).toBe(false);
+      await expect(
+        client.check({
+          userId: 'user-123',
+          workspaceId: 'ws-456',
+          actionKey: 'docs.document.create',
+        }),
+      ).rejects.toThrow('Invalid response format from authz service');
     });
 
     it('should send correct headers and body', async () => {

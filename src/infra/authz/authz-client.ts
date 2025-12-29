@@ -68,25 +68,25 @@ export class AuthzClient implements IAuthzClient {
       });
 
       if (!response.ok) {
-        logger.warn('[AuthzClient] Authz service returned non-OK status', {
+        logger.error('[AuthzClient] Authz service returned non-OK status', {
           status: response.status,
           userId,
           workspaceId,
           actionKey,
         });
-        return { allowed: false };
+        throw new Error(`Authz service returned non-OK status: ${response.status}`);
       }
 
       const parsed = await response.json().catch(() => null);
       const allowed = AuthzClient.extractAllowed(parsed);
 
       if (allowed === null) {
-        logger.warn('[AuthzClient] Could not extract allowed from response', {
+        logger.error('[AuthzClient] Could not extract allowed from response', {
           userId,
           workspaceId,
           actionKey,
         });
-        return { allowed: false };
+        throw new Error('Invalid response format from authz service');
       }
 
       return { allowed };
