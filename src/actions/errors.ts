@@ -11,3 +11,21 @@ export class NotFoundError extends DomainError {
     super(`${resource} not found with id ${id}`, 'NOT_FOUND', 404);
   }
 }
+
+/**
+ * DOC-RBAC-1: Thrown when user is not authenticated but action requires authentication.
+ */
+export class UnauthorizedError extends DomainError {
+  constructor(message: string = 'Authentication required') {
+    super(message, 'UNAUTHORIZED', 401);
+  }
+}
+
+/**
+ * DOC-RBAC-1: Thrown when user doesn't have permission to perform an action.
+ */
+export class ForbiddenError extends DomainError {
+  constructor(message: string = 'Permission denied') {
+    super(message, 'FORBIDDEN', 403);
+  }
+}

@@ -29,6 +29,7 @@ describe('createDocumentHandler', () => {
     const ctx = {
       workspaceId: 'workspace-123',
       userId: 'user-123',
+      requestId: 'test-req-123',
     };
 
     const expected = {
@@ -62,6 +63,7 @@ describe('createDocumentHandler', () => {
     const ctx = {
       workspaceId: 'workspace-123',
       userId: 'user-123',
+      requestId: 'test-req-456',
     };
 
     try {

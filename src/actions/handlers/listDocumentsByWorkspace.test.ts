@@ -25,6 +25,7 @@ describe('listDocumentsByWorkspaceHandler', () => {
   const mockCtx = {
     workspaceId: 'workspace-123',
     userId: 'user-123',
+    requestId: 'test-req-123',
   };
 
   const payload = {

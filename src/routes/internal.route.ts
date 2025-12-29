@@ -19,6 +19,7 @@ import { requireInternalServiceAuth } from '../middleware/internal-service-auth'
 import { config } from '../infra/config';
 import { parseJsonBodyWithLimit } from '../infra/http/parse-json-body';
 import { generateRequestId } from '../infra/http/request-id';
+import { checkActionPermission } from '../middleware/authz-check';
 
 const internalRoute = new Hono();
 internalRoute.use('*', requireInternalServiceAuth());
@@ -84,6 +85,9 @@ internalRoute.post('/doc-actions', async (c) => {
       default:
         throw new UnknownActionError(actionKey);
     }
+
+    // Check authorization before executing the action
+    await checkActionPermission(key, ctx);
 
     const actionResult = await executeDocAction(key, validatedPayload, ctx);
 

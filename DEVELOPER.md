@@ -87,12 +87,44 @@ All responses use the platform standard envelope, **except for** `/health` and `
 |------|------|-------------|
 | `VALIDATION_ERROR` | 400 | Payload validation failed |
 | `UNKNOWN_ACTION` | 400 | Action key not registered |
+| `UNAUTHORIZED` | 401 | User authentication required (missing X-XS-User-Id for write actions) |
+| `FORBIDDEN` | 403 | Permission denied by authz service |
 | `NOT_FOUND` | 404 | Document not found |
 | `INTERNAL_ERROR` | 500 | Unexpected server error |
+
+## Folder Structure
+
+- `src/app.ts`: Hono app wiring. Mounts `/health`, `/ready`, and `/internal`.
+- `src/controllers/`: Controller logic (separated from routing)
+- `src/routes/`: HTTP routes (request/response + validation)
+  - `src/routes/internal.route.ts`: `POST /internal/doc-actions`
+- `src/middleware/`: request-id, internal token auth, error handling, authz check
+  - `src/middleware/authz-check.ts`: Permission checking middleware (DOC-RBAC-1)
+- `src/actions/`: internal action registry, schemas, handlers
+  - `src/actions/handlers/*`: action implementations
+  - `src/actions/errors.ts`: Domain errors (UnauthorizedError, ForbiddenError, etc.)
+- `src/infra/`: config, logger, DB client, request parsing helpers, authz client
+  - `src/infra/authz/`: Authz service client (DOC-RBAC-1)
+- `tests/`: unit and integration tests
+  - `tests/*.unit.test.ts`: unit/contract tests (no DB)
+  - `tests/*.integration.test.ts`: DB-backed tests (gated)
 
 ## Action Contracts
 
 The internal action registry is exposed via `POST /internal/doc-actions` and requires `X-Workspace-Id`.
+
+### Authorization (DOC-RBAC-1)
+
+All document actions are protected by the authz service:
+
+- **Write actions** (`docs.document.create`, `docs.document.update`) require:
+  - `X-XS-User-Id` header (returns `401 Unauthorized` if missing)
+  - Authz permission check (returns `403 Forbidden` if denied)
+- **Read actions** (`docs.document.read`, `docs.document.listByWorkspace`):
+  - Can proceed without `X-XS-User-Id` if authz allows
+  - Workspace scoping still enforced via `ctx.workspaceId`
+
+### Supported Actions
 
 - `docs.document.update`
   - Validates `id` and requires at least one of `title`, `content`, `status`
