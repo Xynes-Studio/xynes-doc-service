@@ -69,9 +69,7 @@ export function createTestJwt(
     const payloadArg = audience;
     const headerArg = signingKey !== TEST_SIGNING_KEY ? signingKey : undefined;
     const header =
-      typeof options === 'object' && 'alg' in options
-        ? options
-        : { alg: 'HS256', typ: 'JWT' };
+      typeof options === 'object' && 'alg' in options ? options : { alg: 'HS256', typ: 'JWT' };
 
     payload = {
       aud: payloadArg.aud,

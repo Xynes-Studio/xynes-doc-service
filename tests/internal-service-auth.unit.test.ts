@@ -12,11 +12,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Hono } from 'hono';
 import { requireInternalServiceAuth } from '../src/middleware/internal-service-auth';
-import {
-  createTestJwt,
-  TEST_SIGNING_KEY,
-  LEGACY_TOKEN,
-} from './helpers/jwt-test-utils';
+import { createTestJwt, TEST_SIGNING_KEY, LEGACY_TOKEN } from './helpers/jwt-test-utils';
 
 const JWT_SIGNING_KEY = TEST_SIGNING_KEY;
 
