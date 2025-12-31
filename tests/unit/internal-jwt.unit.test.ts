@@ -5,6 +5,7 @@
  * - JWT structure validation
  * - Signature verification
  * - Audience validation
+ * - Issuer validation
  * - Time-based validations (exp, iat)
  * - Error handling
  */
@@ -17,42 +18,12 @@ import {
   type InternalJwtPayload,
   type ServiceKey,
 } from '../../src/infra/security/internal-jwt';
-
-const TEST_SIGNING_KEY = 'test-signing-key-32-bytes-minimum';
-
-/**
- * Helper to base64url encode without padding
- */
-function base64UrlEncode(data: Buffer | string): string {
-  const buffer = typeof data === 'string' ? Buffer.from(data, 'utf8') : data;
-  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-/**
- * Helper to create a valid JWT for testing
- */
-function createTestJwt(
-  payload: Partial<InternalJwtPayload> & { aud: ServiceKey },
-  signingKey: string = TEST_SIGNING_KEY,
-  header: Record<string, unknown> = { alg: 'HS256', typ: 'JWT' },
-): string {
-  const now = Math.floor(Date.now() / 1000);
-  const fullPayload: InternalJwtPayload = {
-    aud: payload.aud,
-    iat: payload.iat ?? now,
-    exp: payload.exp ?? now + 60,
-    internal: payload.internal ?? true,
-    requestId: payload.requestId ?? 'req-test-123',
-  };
-
-  const encodedHeader = base64UrlEncode(JSON.stringify(header));
-  const encodedPayload = base64UrlEncode(JSON.stringify(fullPayload));
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const signature = createHmac('sha256', signingKey).update(signingInput).digest();
-  const encodedSignature = base64UrlEncode(signature);
-
-  return `${signingInput}.${encodedSignature}`;
-}
+import {
+  createTestJwt,
+  createCustomJwt,
+  TEST_SIGNING_KEY,
+  base64UrlEncode,
+} from '../helpers/jwt-test-utils';
 
 describe('looksLikeJwt', () => {
   it('returns true for valid JWT format', () => {
@@ -240,6 +211,78 @@ describe('verifyInternalJwt', () => {
       });
 
       expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('issuer validation', () => {
+    it('accepts token with matching issuer when expectedIssuer is set', () => {
+      const token = createTestJwt({
+        aud: 'doc-service',
+        iss: 'gateway-service',
+        iat: now,
+        exp: now + 60,
+      });
+
+      const result = verifyInternalJwt(token, TEST_SIGNING_KEY, {
+        expectedAudience: 'doc-service',
+        expectedIssuer: 'gateway-service',
+        nowEpochSeconds: now,
+      });
+
+      expect(result.valid).toBe(true);
+      expect(result.payload?.iss).toBe('gateway-service');
+    });
+
+    it('rejects token with wrong issuer', () => {
+      const token = createTestJwt({
+        aud: 'doc-service',
+        iss: 'cms-service',
+        iat: now,
+        exp: now + 60,
+      });
+
+      const result = verifyInternalJwt(token, TEST_SIGNING_KEY, {
+        expectedAudience: 'doc-service',
+        expectedIssuer: 'gateway-service',
+        nowEpochSeconds: now,
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('issuer_mismatch');
+    });
+
+    it('accepts token without issuer when expectedIssuer is not set', () => {
+      const token = createTestJwt({
+        aud: 'doc-service',
+        iat: now,
+        exp: now + 60,
+      });
+
+      const result = verifyInternalJwt(token, TEST_SIGNING_KEY, {
+        expectedAudience: 'doc-service',
+        nowEpochSeconds: now,
+      });
+
+      // Should be valid - issuer is optional
+      expect(result.valid).toBe(true);
+    });
+
+    it('accepts token with issuer when expectedIssuer is not set', () => {
+      const token = createTestJwt({
+        aud: 'doc-service',
+        iss: 'gateway-service',
+        iat: now,
+        exp: now + 60,
+      });
+
+      const result = verifyInternalJwt(token, TEST_SIGNING_KEY, {
+        expectedAudience: 'doc-service',
+        nowEpochSeconds: now,
+        // No expectedIssuer - should still accept
+      });
+
+      expect(result.valid).toBe(true);
+      expect(result.payload?.iss).toBe('gateway-service');
     });
   });
 

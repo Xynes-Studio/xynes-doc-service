@@ -64,8 +64,23 @@ export function requireInternalServiceAuth() {
     const legacyToken = process.env.INTERNAL_SERVICE_TOKEN;
     const authMode = getAuthMode();
 
-    // Check configuration
-    if (!jwtSigningKey && !legacyToken) {
+    // Mode-specific configuration validation (fail fast on misconfiguration)
+    if (authMode === 'jwt' && !jwtSigningKey) {
+      logger.error(
+        '[InternalAuth] Misconfigured: INTERNAL_AUTH_MODE=jwt but INTERNAL_JWT_SIGNING_KEY is not set',
+        {
+          requestId,
+          path: c.req.path,
+          method: c.req.method,
+        },
+      );
+      return c.json(
+        createErrorResponse('INTERNAL_ERROR', 'Internal auth misconfigured', requestId),
+        500,
+      );
+    }
+
+    if (authMode === 'hybrid' && !jwtSigningKey && !legacyToken) {
       logger.error('[InternalAuth] Misconfigured: No signing key or token set', {
         requestId,
         path: c.req.path,

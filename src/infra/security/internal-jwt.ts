@@ -8,15 +8,22 @@
  * - Uses HS256 with timing-safe comparison
  * - Validates exp and iat claims to prevent replay attacks
  * - Validates audience claim to prevent token reuse across services
- * - Token values are NEVER logged (only metadata like exp, aud)
+ * - Optionally validates issuer claim to verify token origin
+ * - Token values are NEVER logged (only metadata like exp, aud, iss)
+ *
+ * Note on looksLikeJwt: This function is used for routing between JWT and legacy auth,
+ * not for security decisions. The actual security validation happens in verifyInternalJwt
+ * with timing-safe signature verification.
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
  * Service keys for internal service identification.
+ * All services in the platform that may participate in internal JWT authentication.
  */
 export type ServiceKey =
+  | 'gateway-service'
   | 'doc-service'
   | 'cms-service'
   | 'authz-service'
@@ -27,8 +34,10 @@ export type ServiceKey =
  * Internal JWT payload structure.
  */
 export interface InternalJwtPayload {
-  /** Target service (audience) */
+  /** Target service (audience) - who can accept this token */
   aud: ServiceKey;
+  /** Issuing service - who created this token */
+  iss?: ServiceKey;
   /** Issued at timestamp (epoch seconds) */
   iat: number;
   /** Expiration timestamp (epoch seconds) */
@@ -45,6 +54,8 @@ export interface InternalJwtPayload {
 export interface VerifyInternalJwtOptions {
   /** Expected service key (audience) */
   expectedAudience: ServiceKey;
+  /** Expected issuer (optional - if set, validates iss claim) */
+  expectedIssuer?: ServiceKey;
   /** Override current time for testing (epoch seconds) */
   nowEpochSeconds?: number;
   /** Max clock skew tolerance in seconds (default: 30) */
@@ -150,7 +161,7 @@ export function verifyInternalJwt(
   signingKey: string,
   options: VerifyInternalJwtOptions,
 ): VerifyInternalJwtResult {
-  const { expectedAudience, clockSkewSeconds = 30, maxAgeSeconds = 120 } = options;
+  const { expectedAudience, expectedIssuer, clockSkewSeconds = 30, maxAgeSeconds = 120 } = options;
   const now = options.nowEpochSeconds ?? Math.floor(Date.now() / 1000);
 
   // Split token into parts
@@ -193,6 +204,11 @@ export function verifyInternalJwt(
   // Validate audience
   if (payload.aud !== expectedAudience) {
     return { valid: false, error: 'audience_mismatch' };
+  }
+
+  // Validate issuer (optional - only if expectedIssuer is provided)
+  if (expectedIssuer && payload.iss !== expectedIssuer) {
+    return { valid: false, error: 'issuer_mismatch' };
   }
 
   // Validate iat (issued at) - must be present and not too old
