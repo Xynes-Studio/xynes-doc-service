@@ -7,9 +7,15 @@ import { readyRoute } from './routes/ready.route';
 import { internalRoute } from './routes/internal.route';
 
 const app = new Hono();
+const ACCESS_LOG_SKIP_PATHS = new Set(['/health', '/ready']);
 
 app.use('*', requestIdMiddleware());
-app.use('*', logger());
+app.use('*', (c, next) => {
+  if (ACCESS_LOG_SKIP_PATHS.has(c.req.path)) {
+    return next();
+  }
+  return logger()(c, next);
+});
 
 app.route('/health', healthRoute);
 app.route('/ready', readyRoute);

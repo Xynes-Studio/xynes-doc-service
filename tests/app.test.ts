@@ -12,11 +12,22 @@ describe('Infrastructure Config', () => {
 });
 
 describe('Hono App Integration', () => {
-  test('GET /health returns 200 OK', async () => {
+  test('GET /health returns the DB-backed health contract', async () => {
     const res = await app.request('/health');
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toEqual({ status: 'ok', service: 'xynes-doc-service' });
+    expect([200, 503]).toContain(res.status);
+    const body = (await res.json()) as {
+      ok: boolean;
+      service: string;
+      version: string;
+      uptime_seconds: number;
+      checks: { db: 'ok' | 'fail' | 'skipped' };
+    };
+    expect(body.service).toBe('xynes-doc-service');
+    expect(typeof body.ok).toBe('boolean');
+    expect(body.ok).toBe(res.status === 200);
+    expect(typeof body.version).toBe('string');
+    expect(Number.isInteger(body.uptime_seconds)).toBe(true);
+    expect(Object.keys(body.checks)).toEqual(['db']);
   });
 
   test('Error Handler catches DomainError', async () => {
