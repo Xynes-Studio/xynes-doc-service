@@ -19,6 +19,8 @@
   "scripts": {
     "migrate": "drizzle-kit migrate",
     "dev": "bun run scripts/run-with-env.ts run --watch src/index.ts",
+    "healthcheck": "bun -e 'const r=await fetch(`http://127.0.0.1:${process.env.PORT||4201}/health`);process.exit(r.ok?0:1)'",
+    "typecheck": "tsc --noEmit",
     "test": "bun run scripts/run-with-env.ts test",
     "test:integration": "bun run scripts/run-with-env.ts test --integration",
     "test:coverage": "bun run scripts/run-with-env.ts test --coverage",

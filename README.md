@@ -50,7 +50,8 @@ Start the development server with hot-reload:
 bun run dev
 ```
 
-Server runs on `http://localhost:3000` by default.
+The host-run development server defaults to `http://localhost:3000`. The H-5
+production image sets the platform service port to `4201`.
 
 ### Testing
 
@@ -100,6 +101,7 @@ Copy `.env.example` to `.env` (creates automatically if using `bun init` or manu
 | PORT | Server Port | 3000 |
 | DATABASE_URL | Postgres Connection String | postgres://localhost:5432/xynes_docs |
 | NODE_ENV | Environment | development |
+| XYNES_BUILD_VERSION | Version reported by `GET /health` | dev |
 | MAX_JSON_BODY_BYTES | Max JSON request body size (bytes) | 1048576 |
 | INTERNAL_JWT_SIGNING_KEY | HS256 signing key for JWT-based internal auth (≥32 bytes recommended) | (required for jwt mode) |
 | INTERNAL_AUTH_MODE | Authentication mode: `jwt` (JWT only) or `hybrid` (JWT + legacy token) | hybrid |

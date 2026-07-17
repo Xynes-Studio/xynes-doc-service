@@ -60,8 +60,57 @@ ssh -N -L 5432:127.0.0.1:5432 xynes@84.247.176.134
 
 ## Routes
 
-- `GET /health`: Liveness check. Returns `{ "status": "ok", "service": "xynes-doc-service" }`.
+- `GET /health`: unauthenticated infrastructure health check. Returns the shared
+  H-series contract with `ok`, `service`, `version`, `uptime_seconds`, and
+  `checks.db`. PostgreSQL probe failures return the same JSON shape with HTTP 503.
 - `GET /ready`: Readiness check. Runs a fast Postgres check and returns `{ "status": "ready" }` (or 503 with error).
+
+### Health endpoint (H-5)
+
+`GET /health` follows
+[`HEALTHCHECK-CONTRACT.md`](../xynes-infra/infra/release/HEALTHCHECK-CONTRACT.md)
+§2:
+
+```json
+{
+  "ok": true,
+  "service": "xynes-doc-service",
+  "version": "sha-abcdef0",
+  "uptime_seconds": 42,
+  "checks": { "db": "ok" }
+}
+```
+
+- `XYNES_BUILD_VERSION` supplies the image version and defaults to `dev`.
+- The DB probe is read-only, has a one-second timeout, and caches failures for 30
+  seconds to avoid retry storms.
+- `/health` and `/ready` are excluded from Hono access logs.
+- Health responses never include errors, connection strings, environment values,
+  file paths, or stack traces.
+
+### Production Dockerfile (H-5)
+
+The service-local Dockerfile exposes `base`, `dev`, and `prod` targets. The
+production target:
+
+- uses the shared digest-pinned `oven/bun:1-alpine` H-series base;
+- runs as non-root `xynes` (UID/GID 1001);
+- installs production dependencies only;
+- includes `drizzle/` and migration metadata;
+- exposes port `4201` and runs `src/index.ts` through Bun;
+- uses `bun run healthcheck` for the Docker `HEALTHCHECK`.
+
+Build and inspect it locally:
+
+```bash
+docker buildx build --target prod \
+  -t xynesplatform/xynes-doc-service:h5-test --load .
+docker image inspect xynesplatform/xynes-doc-service:h5-test \
+  --format '{{.Config.User}} {{json .Config.Healthcheck}}'
+```
+
+Temporary Trivy findings and their reachability audits are documented in
+`CVE-WAIVERS.md`. Re-run that audit before every production release.
 
 ## Standard Response Envelope
 
