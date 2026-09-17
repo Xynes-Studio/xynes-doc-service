@@ -112,7 +112,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(201);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(true);
       expect(mockAuthzClient.check).toHaveBeenCalledTimes(1);
     });
@@ -140,7 +140,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(403);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.code).toBe('FORBIDDEN');
     });
@@ -166,7 +166,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(401);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.code).toBe('UNAUTHORIZED');
       // Authz should NOT be called - fail fast for missing userId
@@ -192,7 +192,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(401);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.code).toBe('UNAUTHORIZED');
     });
@@ -217,7 +217,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(200);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(true);
       expect(mockAuthzClient.check).toHaveBeenCalledTimes(1);
     });
@@ -291,7 +291,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(500);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
     });
   });
@@ -317,7 +317,7 @@ describe('Authz Integration (Unit)', () => {
       });
 
       expect(res.status).toBe(400);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.message).toContain('X-Workspace-Id');
     });

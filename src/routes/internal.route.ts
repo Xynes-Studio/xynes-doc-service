@@ -30,8 +30,8 @@ const actionRequestSchema = z.object({
 });
 
 internalRoute.post('/doc-actions', async (c) => {
-  const requestId = c.get('requestId') || generateRequestId();
-  c.set('requestId', requestId);
+  const requestId = (c.get('requestId' as never) as string | undefined) || generateRequestId();
+  c.set('requestId' as never, requestId as never);
   const workspaceId = c.req.header('X-Workspace-Id');
   const userId = c.req.header('X-XS-User-Id');
 

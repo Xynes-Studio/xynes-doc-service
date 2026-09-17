@@ -6,10 +6,17 @@ import { db } from '../src/infra/db';
 import { documents } from '../src/infra/db/schema';
 import { eq } from 'drizzle-orm';
 import { INTERNAL_SERVICE_TOKEN } from './support/internal-auth';
+import { resetAuthzClient, setAuthzClient } from '../src/infra/authz';
 
 describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Actions Endpoint', () => {
   beforeAll(() => {
     registerDocActions();
+    // These tests cover the route and live document database together. RBAC
+    // behavior is exercised independently, so grant permission here instead of
+    // coupling random fixture IDs to seeded authz memberships.
+    setAuthzClient({
+      check: async () => ({ allowed: true }),
+    });
   });
 
   const workspaceId = uuidv4();
@@ -22,6 +29,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Internal Doc Acti
         await db.delete(documents).where(eq(documents.id, id));
       }
     }
+    resetAuthzClient();
   });
 
   it('should create a document via /internal/doc-actions', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import app from '../src/app';
+import { createApp } from '../src/app';
 import { config } from '../src/infra/config';
 import { DomainError } from '@xynes/errors';
 import { Hono } from 'hono';
@@ -13,6 +13,7 @@ describe('Infrastructure Config', () => {
 
 describe('Hono App Integration', () => {
   test('GET /health returns the DB-backed health contract', async () => {
+    const app = createApp({ pingDb: async () => undefined });
     const res = await app.request('/health');
     expect([200, 503]).toContain(res.status);
     const body = (await res.json()) as {
