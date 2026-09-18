@@ -24,7 +24,7 @@
     "test": "bun run scripts/run-with-env.ts test",
     "test:integration": "bun run scripts/run-with-env.ts test --integration tests/db.test.ts tests/ready.integration.test.ts tests/doc_actions.test.ts tests/internal_actions.test.ts",
     "test:coverage": "bun run scripts/run-with-env.ts test --coverage",
-    "test:integration:coverage": "bun run scripts/run-with-env.ts test --integration --coverage tests/db.test.ts tests/ready.integration.test.ts tests/doc_actions.test.ts tests/internal_actions.test.ts",
+    "test:integration:coverage": "bun run scripts/run-with-env.ts test --integration --coverage",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix"
   },
