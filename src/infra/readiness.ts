@@ -31,6 +31,6 @@ export async function checkPostgresReadiness({
       await sql`SELECT 1`;
     }
   } finally {
-    await sql.end({ timeout: 2 }).catch(() => undefined);
+    await sql.end({ timeout: 0 }).catch(() => undefined);
   }
 }

@@ -12,6 +12,7 @@ describe('Action Registry', () => {
   const mockContext: ActionContext = {
     workspaceId: 'ws-123',
     userId: 'user-456',
+    requestId: 'req-test',
   };
 
   it('should register and execute an action successfully', async () => {

@@ -2,9 +2,12 @@ import { describe, it, expect, mock } from 'bun:test';
 import { ZodError } from 'zod';
 
 const mockInsert = mock(() => ({
-  values: mock(() => ({
-    returning: mock(() => Promise.resolve([])),
-  })),
+  values: mock((values: unknown) => {
+    void values;
+    return {
+      returning: mock(() => Promise.resolve([] as any[])),
+    };
+  }),
 }));
 
 mock.module('../../infra/db', () => ({

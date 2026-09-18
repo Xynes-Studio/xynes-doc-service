@@ -32,7 +32,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
       content: { foo: 'bar' },
       status: 'draft',
     };
-    const ctx = { workspaceId, userId };
+    const ctx = { workspaceId, userId, requestId: 'req-create' };
 
     const doc: any = await executeDocAction('docs.document.create', payload, ctx);
 
@@ -48,7 +48,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
   it('should read a document', async () => {
     // Create first
     const payload = { title: 'Read Me', type: 'note', content: {}, status: 'published' };
-    const ctx = { workspaceId, userId };
+    const ctx = { workspaceId, userId, requestId: 'req-read' };
     const created: any = await executeDocAction('docs.document.create', payload, ctx);
     createdDocIds.push(created.id);
 
@@ -62,7 +62,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
   it('should update a document', async () => {
     // Create first
     const payload = { title: 'Old Title', type: 'page', content: { v: 1 } };
-    const ctx = { workspaceId, userId };
+    const ctx = { workspaceId, userId, requestId: 'req-update' };
     const created: any = await executeDocAction('docs.document.create', payload, ctx);
     createdDocIds.push(created.id);
 
@@ -94,12 +94,12 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
     // We have created some documents in `workspaceId` from previous tests
     // Let's create one more to be sure
     const payload = { title: 'List Me', type: 'list-item', content: {} };
-    const ctx = { workspaceId, userId };
+    const ctx = { workspaceId, userId, requestId: 'req-list' };
     const created: any = await executeDocAction('docs.document.create', payload, ctx);
     createdDocIds.push(created.id);
 
     // List
-    const listCtx = { workspaceId };
+    const listCtx = { workspaceId, requestId: 'req-list-by-workspace' };
     const list: any = await executeDocAction(
       'docs.document.listByWorkspace',
       { limit: 10 },
@@ -120,12 +120,12 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
   it('should throw NotFoundError for wrong workspace', async () => {
     // Create in workspace 1
     const p1 = { title: 'Secret', type: 'page', content: {} };
-    const ctx1 = { workspaceId, userId };
+    const ctx1 = { workspaceId, userId, requestId: 'req-wrong-workspace-create' };
     const created: any = await executeDocAction('docs.document.create', p1, ctx1);
     createdDocIds.push(created.id);
 
     // Try read in workspace 2
-    const ctx2 = { workspaceId: uuidv4(), userId }; // New workspace
+    const ctx2 = { workspaceId: uuidv4(), userId, requestId: 'req-wrong-workspace-read' }; // New workspace
 
     try {
       await executeDocAction('docs.document.read', { id: created.id }, ctx2);
@@ -136,7 +136,7 @@ describe.skipIf(process.env.RUN_INTEGRATION_TESTS !== 'true')('Doc Actions Integ
   });
 
   it('should throw NotFoundError for non-existent id', async () => {
-    const ctx = { workspaceId, userId };
+    const ctx = { workspaceId, userId, requestId: 'req-not-found' };
     try {
       await executeDocAction('docs.document.read', { id: uuidv4() }, ctx);
       throw new Error('Should have thrown');

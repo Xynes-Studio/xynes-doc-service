@@ -6,7 +6,7 @@ import { NotFoundError } from '../errors';
 // Mock DB
 const mockUpdate = mock(() => ({
   set: mock(() => ({
-    where: mock(() => ({ returning: mock(() => Promise.resolve([])) })),
+    where: mock(() => ({ returning: mock(() => Promise.resolve([] as any[])) })),
   })),
 }));
 
@@ -37,7 +37,15 @@ describe('updateDocumentHandler', () => {
   });
 
   it('should update document successfully', async () => {
-    const mockUpdatedDoc = { id: docId, workspaceId: 'workspace-123', ...payload };
+    const mockUpdatedDoc = {
+      ...payload,
+      workspaceId: 'workspace-123',
+      type: 'page',
+      createdBy: mockCtx.userId,
+      updatedBy: mockCtx.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     const returningMock = mock(() => Promise.resolve([mockUpdatedDoc]));
     const updateWhereMock = mock(() => ({ returning: returningMock }));
     const setMock = mock(() => ({ where: updateWhereMock }));

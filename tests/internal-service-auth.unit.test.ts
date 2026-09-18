@@ -64,7 +64,7 @@ describe('requireInternalServiceAuth (unit)', () => {
       });
 
       expect(res.status).toBe(500);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.code).toBe('INTERNAL_ERROR');
     });
@@ -88,7 +88,7 @@ describe('requireInternalServiceAuth (unit)', () => {
 
       // Should fail fast with 500 because jwt mode requires JWT signing key
       expect(res.status).toBe(500);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.ok).toBe(false);
       expect(body.error.code).toBe('INTERNAL_ERROR');
     });
@@ -114,7 +114,7 @@ describe('requireInternalServiceAuth (unit)', () => {
 
       expect(res.status).toBe(401);
       expect(ran).toBe(false);
-      const body = await res.json();
+      const body = (await res.json()) as any;
       expect(body.error.code).toBe('UNAUTHORIZED');
     });
   });

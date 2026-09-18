@@ -39,7 +39,7 @@ describe('AuthzClient (Unit)', () => {
             headers: { 'Content-Type': 'application/json' },
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
       const result = await client.check({
@@ -59,7 +59,7 @@ describe('AuthzClient (Unit)', () => {
             headers: { 'Content-Type': 'application/json' },
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
       const result = await client.check({
@@ -79,7 +79,7 @@ describe('AuthzClient (Unit)', () => {
             headers: { 'Content-Type': 'application/json' },
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
       const result = await client.check({
@@ -98,7 +98,7 @@ describe('AuthzClient (Unit)', () => {
             status: 500,
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
 
@@ -112,7 +112,7 @@ describe('AuthzClient (Unit)', () => {
     });
 
     it('should throw when fetch throws (network error)', async () => {
-      global.fetch = mock(() => Promise.reject(new Error('Network error'))) as typeof fetch;
+      global.fetch = mock(() => Promise.reject(new Error('Network error'))) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
 
@@ -128,7 +128,7 @@ describe('AuthzClient (Unit)', () => {
     it('should throw timeout error when request takes too long', async () => {
       // Create a fetch that simulates a slow response by never resolving
       global.fetch = mock(
-        (_input: RequestInfo | URL, init?: RequestInit) =>
+        (_input: string | URL | Request, init?: RequestInit) =>
           new Promise((_resolve, reject) => {
             // Listen for abort signal
             if (init?.signal) {
@@ -139,7 +139,7 @@ describe('AuthzClient (Unit)', () => {
               });
             }
           }),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       // Use a very short timeout for testing
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN, 50);
@@ -160,7 +160,7 @@ describe('AuthzClient (Unit)', () => {
             status: 200,
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       // Create client with custom timeout
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN, 10000);
@@ -180,7 +180,7 @@ describe('AuthzClient (Unit)', () => {
             status: 200,
           }),
         ),
-      ) as typeof fetch;
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
 
@@ -196,14 +196,14 @@ describe('AuthzClient (Unit)', () => {
     it('should send correct headers and body', async () => {
       let capturedRequest: Request | null = null;
 
-      global.fetch = mock((input: RequestInfo | URL) => {
+      global.fetch = mock((input: string | URL | Request) => {
         capturedRequest = input as Request;
         return Promise.resolve(
           new Response(JSON.stringify({ allowed: true }), {
             status: 200,
           }),
         );
-      }) as typeof fetch;
+      }) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
       await client.check({

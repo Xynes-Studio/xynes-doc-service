@@ -4,17 +4,17 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/pg": "^8.15.6",
+    "@types/bun": "^1.4.2",
+    "@types/pg": "^8.23.1",
     "@types/uuid": "^11.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "@typescript-eslint/parser": "^8.49.0",
-    "drizzle-kit": "^0.31.8",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
+    "@typescript-eslint/parser": "^8.70.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.7.4",
-    "uuid": "^13.0.0"
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.6",
+    "uuid": "^13.0.2"
   },
   "scripts": {
     "migrate": "drizzle-kit migrate",
@@ -22,7 +22,7 @@
     "healthcheck": "bun -e 'const r=await fetch(`http://127.0.0.1:${process.env.PORT||4201}/health`);process.exit(r.ok?0:1)'",
     "typecheck": "tsc --noEmit",
     "test": "bun run scripts/run-with-env.ts test",
-    "test:integration": "bun run scripts/run-with-env.ts test --integration",
+    "test:integration": "bun run scripts/run-with-env.ts test --integration tests/db.test.ts tests/ready.integration.test.ts tests/doc_actions.test.ts tests/internal_actions.test.ts",
     "test:coverage": "bun run scripts/run-with-env.ts test --coverage",
     "test:integration:coverage": "bun run scripts/run-with-env.ts test --integration --coverage",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
@@ -32,9 +32,9 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.0",
-    "hono": "^4.10.8",
-    "postgres": "^3.4.7",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.8",
+    "postgres": "^3.4.9",
     "zod": "3.23.8"
   }
 }

@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
 import * as healthController from '../controllers/health.controller';
 
-export const healthRoute = new Hono();
+export function createHealthRoute(
+  getHealth: ReturnType<typeof healthController.createGetHealth> = healthController.getHealth,
+) {
+  const healthRoute = new Hono();
+  healthRoute.get('/', getHealth);
+  return healthRoute;
+}
 
-healthRoute.get('/', healthController.getHealth);
+export const healthRoute = createHealthRoute();

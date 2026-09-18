@@ -3,7 +3,7 @@ import { NotFoundError } from '../errors';
 
 const mockSelect = mock(() => ({
   from: mock(() => ({
-    where: mock(() => Promise.resolve([])),
+    where: mock(() => Promise.resolve([] as any[])),
   })),
 }));
 
@@ -20,7 +20,18 @@ describe('readDocumentHandler', () => {
 
   it('returns the document when found', async () => {
     const docId = '550e8400-e29b-41d4-a716-446655440000';
-    const doc = { id: docId, workspaceId: ctx.workspaceId, title: 'Read Me' };
+    const doc = {
+      id: docId,
+      workspaceId: ctx.workspaceId,
+      title: 'Read Me',
+      type: 'page',
+      content: {},
+      status: 'draft',
+      createdBy: ctx.userId,
+      updatedBy: ctx.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     const whereMock = mock(() => Promise.resolve([doc]));
     const fromMock = mock(() => ({ where: whereMock }));
     mockSelect.mockImplementation(() => ({ from: fromMock }));
