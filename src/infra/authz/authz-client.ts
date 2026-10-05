@@ -5,6 +5,8 @@
  * All document actions must be permission-checked via this client.
  */
 
+import { loadInternalRequestSigner, signInternalRequest } from '../security/internal-request';
+
 import { logger } from '../logger';
 
 export interface AuthzCheckParams {
@@ -35,36 +37,26 @@ function anonymize(value: string | undefined): string {
 
 export class AuthzClient implements IAuthzClient {
   private authzUrl: string;
-  private internalServiceToken: string;
   private timeoutMs: number;
 
-  constructor(authzUrl: string, internalServiceToken: string, timeoutMs?: number) {
+  constructor(authzUrl: string, _legacyToken: string, timeoutMs?: number) {
     this.authzUrl = authzUrl;
-    this.internalServiceToken = internalServiceToken;
     this.timeoutMs = timeoutMs ?? DEFAULT_AUTHZ_TIMEOUT_MS;
   }
 
   private static extractAllowed(value: unknown): boolean | null {
     if (!value || typeof value !== 'object') return null;
-
-    // Handle { allowed: boolean } response
-    if ('allowed' in value && typeof (value as { allowed?: unknown }).allowed === 'boolean') {
-      return (value as { allowed: boolean }).allowed;
-    }
-
-    // Handle { ok: true, data: { allowed: boolean } } envelope
-    if ('ok' in value && (value as { ok?: unknown }).ok === true && 'data' in value) {
-      const data = (value as { data?: unknown }).data;
+    if ('allowed' in value && typeof value.allowed === 'boolean') return value.allowed;
+    if ('ok' in value && value.ok === true && 'data' in value) {
+      const data = value.data;
       if (
         data &&
         typeof data === 'object' &&
         'allowed' in data &&
-        typeof (data as { allowed?: unknown }).allowed === 'boolean'
-      ) {
-        return (data as { allowed: boolean }).allowed;
-      }
+        typeof data.allowed === 'boolean'
+      )
+        return data.allowed;
     }
-
     return null;
   }
 
@@ -77,13 +69,31 @@ export class AuthzClient implements IAuthzClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
-      const response = await fetch(`${this.authzUrl}/authz/check`, {
+      const url = `${this.authzUrl}/authz/check`;
+      const body = JSON.stringify({ userId, workspaceId, actionKey });
+      const headers = new Headers({
+        'Content-Type': 'application/json',
+        'X-XS-User-Id': userId,
+        'X-Workspace-Id': workspaceId,
+      });
+      headers.set(
+        'X-Internal-Service-Token',
+        signInternalRequest(
+          {
+            audience: 'authz-service',
+            operation: 'authz.check',
+            url,
+            method: 'POST',
+            headers,
+            body,
+          },
+          loadInternalRequestSigner('docs'),
+        ),
+      );
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': this.internalServiceToken,
-        },
-        body: JSON.stringify({ userId, workspaceId, actionKey }),
+        headers,
+        body,
         signal: controller.signal,
       });
 
@@ -110,7 +120,7 @@ export class AuthzClient implements IAuthzClient {
       }
 
       return { allowed };
-    } catch (error) {
+    } catch (error: unknown) {
       // Handle abort/timeout specifically
       if (error instanceof Error && error.name === 'AbortError') {
         logger.error('[AuthzClient] Authz check timed out', {
@@ -123,7 +133,7 @@ export class AuthzClient implements IAuthzClient {
       }
 
       logger.error('[AuthzClient] Authz check failed', {
-        error: (error as Error).message,
+        error: 'Internal permission request failed',
         actionKey,
         anonUserId,
         anonWorkspaceId,
@@ -141,13 +151,7 @@ export class AuthzClient implements IAuthzClient {
  */
 export function createAuthzClient(): IAuthzClient {
   const authzUrl = process.env.AUTHZ_SERVICE_URL || 'http://localhost:4300';
-  const internalServiceToken = process.env.INTERNAL_SERVICE_TOKEN || '';
-
-  if (!internalServiceToken) {
-    logger.warn('[AuthzClient] INTERNAL_SERVICE_TOKEN not set - authz calls will fail');
-  }
-
-  return new AuthzClient(authzUrl, internalServiceToken);
+  return new AuthzClient(authzUrl, '');
 }
 
 // Default singleton instance

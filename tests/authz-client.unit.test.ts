@@ -5,7 +5,7 @@
  * These tests mock fetch to avoid network calls.
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, afterAll, afterEach, mock, spyOn } from 'bun:test';
 import {
   AuthzClient,
   createAuthzClient,
@@ -15,17 +15,37 @@ import {
   type IAuthzClient,
 } from '../src/infra/authz/authz-client';
 
+import { generateKeyPairSync } from 'node:crypto';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+const signingKeys = generateKeyPairSync('ed25519');
+const signingDirectory = mkdtempSync(join(tmpdir(), 'authz-client-fixture-'));
+const signingFile = join(signingDirectory, 'private.pem');
+writeFileSync(signingFile, signingKeys.privateKey.export({ type: 'pkcs8', format: 'pem' }), {
+  mode: 0o600,
+});
+const previousIdentityFile = process.env.INTERNAL_REQUEST_PRIVATE_KEY_FILE;
+const previousIdentityId = process.env.INTERNAL_REQUEST_KEY_ID;
+afterAll(() => rmSync(signingDirectory, { recursive: true, force: true }));
+
 describe('AuthzClient (Unit)', () => {
   const TEST_AUTHZ_URL = 'http://authz-service:4300';
   const TEST_TOKEN = 'test-internal-token';
   let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
+    process.env.INTERNAL_REQUEST_PRIVATE_KEY_FILE = signingFile;
+    process.env.INTERNAL_REQUEST_KEY_ID = 'fixture-key';
     originalFetch = global.fetch;
     resetAuthzClient();
   });
 
   afterEach(() => {
+    if (previousIdentityFile === undefined) delete process.env.INTERNAL_REQUEST_PRIVATE_KEY_FILE;
+    else process.env.INTERNAL_REQUEST_PRIVATE_KEY_FILE = previousIdentityFile;
+    if (previousIdentityId === undefined) delete process.env.INTERNAL_REQUEST_KEY_ID;
+    else process.env.INTERNAL_REQUEST_KEY_ID = previousIdentityId;
     global.fetch = originalFetch;
     resetAuthzClient();
   });
@@ -112,7 +132,9 @@ describe('AuthzClient (Unit)', () => {
     });
 
     it('should throw when fetch throws (network error)', async () => {
-      global.fetch = mock(() => Promise.reject(new Error('Network error'))) as unknown as typeof fetch;
+      global.fetch = mock(() =>
+        Promise.reject(new Error('Network error')),
+      ) as unknown as typeof fetch;
 
       const client = new AuthzClient(TEST_AUTHZ_URL, TEST_TOKEN);
 

@@ -1,3 +1,4 @@
+import { signedInit } from './support/internal-request';
 /**
  * DOC-RBAC-1: Tests for authorization enforcement in internal routes.
  *
@@ -31,7 +32,7 @@ const mockInsert = mock(() => ({
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ])
+      ]),
     ),
   })),
 }));
@@ -52,7 +53,7 @@ const mockSelect = mock(() => ({
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ])
+      ]),
     ),
   })),
 }));
@@ -92,24 +93,27 @@ describe('Authz Integration (Unit)', () => {
     it('should allow action when authz returns allowed=true', async () => {
       mockAuthzClient.check = mock(() => Promise.resolve({ allowed: true }));
 
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          'X-XS-User-Id': userId,
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test Document',
-            type: 'page',
-            content: { blocks: [] },
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            'X-XS-User-Id': userId,
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test Document',
+              type: 'page',
+              content: { blocks: [] },
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(201);
       const body = (await res.json()) as any;
@@ -120,24 +124,27 @@ describe('Authz Integration (Unit)', () => {
     it('should return 403 Forbidden when authz returns allowed=false', async () => {
       mockAuthzClient.check = mock(() => Promise.resolve({ allowed: false }));
 
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          'X-XS-User-Id': userId,
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test Document',
-            type: 'page',
-            content: { blocks: [] },
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            'X-XS-User-Id': userId,
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test Document',
+              type: 'page',
+              content: { blocks: [] },
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(403);
       const body = (await res.json()) as any;
@@ -146,24 +153,27 @@ describe('Authz Integration (Unit)', () => {
     });
 
     it('should return 401 Unauthorized for write actions without userId', async () => {
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          // No X-XS-User-Id header
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test Document',
-            type: 'page',
-            content: { blocks: [] },
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            // No X-XS-User-Id header
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test Document',
+              type: 'page',
+              content: { blocks: [] },
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(401);
       const body = (await res.json()) as any;
@@ -174,22 +184,25 @@ describe('Authz Integration (Unit)', () => {
     });
 
     it('should return 401 for update action without userId', async () => {
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          // No X-XS-User-Id header
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.update',
-          payload: {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            title: 'Updated Title',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            // No X-XS-User-Id header
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.update',
+            payload: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              title: 'Updated Title',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(401);
       const body = (await res.json()) as any;
@@ -200,21 +213,24 @@ describe('Authz Integration (Unit)', () => {
     it('should allow read action to proceed even without userId when authz allows', async () => {
       mockAuthzClient.check = mock(() => Promise.resolve({ allowed: true }));
 
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          // No X-XS-User-Id header - read doesn't require it
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.read',
-          payload: {
-            id: '550e8400-e29b-41d4-a716-446655440000',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            // No X-XS-User-Id header - read doesn't require it
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.read',
+            payload: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(200);
       const body = (await res.json()) as any;
@@ -231,28 +247,31 @@ describe('Authz Integration (Unit)', () => {
       });
       setAuthzClient({ check: checkMock });
 
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          'X-XS-User-Id': userId,
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test',
-            type: 'page',
-            content: {},
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            'X-XS-User-Id': userId,
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test',
+              type: 'page',
+              content: {},
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       // Verify the call was made
       expect(checkMock).toHaveBeenCalledTimes(1);
-      
+
       // Verify captured parameters
       expect(capturedParams).toEqual({
         actionKey: 'docs.document.create',
@@ -271,24 +290,27 @@ describe('Authz Integration (Unit)', () => {
         },
       });
 
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          'X-Workspace-Id': workspaceId,
-          'X-XS-User-Id': userId,
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test',
-            type: 'page',
-            content: {},
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            'X-Workspace-Id': workspaceId,
+            'X-XS-User-Id': userId,
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test',
+              type: 'page',
+              content: {},
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(500);
       const body = (await res.json()) as any;
@@ -298,23 +320,26 @@ describe('Authz Integration (Unit)', () => {
 
   describe('Existing header validation still works', () => {
     it('should return 400 when X-Workspace-Id is missing', async () => {
-      const res = await app.request('/internal/doc-actions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-          // No X-Workspace-Id header
-        },
-        body: JSON.stringify({
-          actionKey: 'docs.document.create',
-          payload: {
-            title: 'Test',
-            type: 'page',
-            content: {},
-            status: 'draft',
+      const res = await app.request(
+        '/internal/doc-actions',
+        signedInit('/internal/doc-actions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+            // No X-Workspace-Id header
           },
+          body: JSON.stringify({
+            actionKey: 'docs.document.create',
+            payload: {
+              title: 'Test',
+              type: 'page',
+              content: {},
+              status: 'draft',
+            },
+          }),
         }),
-      });
+      );
 
       expect(res.status).toBe(400);
       const body = (await res.json()) as any;

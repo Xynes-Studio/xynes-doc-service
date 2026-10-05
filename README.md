@@ -103,47 +103,15 @@ Copy `.env.example` to `.env` (creates automatically if using `bun init` or manu
 | NODE_ENV | Environment | development |
 | XYNES_BUILD_VERSION | Version reported by `GET /health` | dev |
 | MAX_JSON_BODY_BYTES | Max JSON request body size (bytes) | 1048576 |
-| INTERNAL_JWT_SIGNING_KEY | HS256 signing key for JWT-based internal auth (≥32 bytes recommended) | (required for jwt mode) |
-| INTERNAL_AUTH_MODE | Authentication mode: `jwt` (JWT only) or `hybrid` (JWT + legacy token) | hybrid |
-| INTERNAL_SERVICE_TOKEN | Legacy shared secret for `/internal/*` endpoints (hybrid mode only) | (required for hybrid mode) |
+| INTERNAL_REQUEST_TRUST_FILE | Receiver public trust JSON | required for internal actions |
+| INTERNAL_REQUEST_PRIVATE_KEY_FILE | Docs-owned Ed25519 signing file for authz checks | required for protected authoring |
+| INTERNAL_REQUEST_KEY_ID | Docs signing key id | provisioned key id |
 
-### Internal Authentication (SEC-INTERNAL-AUTH-2)
+### Internal Authentication
 
-This service supports JWT-based authentication for internal service-to-service calls. The authentication mode is controlled by `INTERNAL_AUTH_MODE`:
+Internal requests require Ed25519 signatures bound to receiver, operation, exact body and actor/workspace/request headers. Shared tokens, HS256 service tokens and hybrid fallback are rejected.
 
-**JWT Mode (`INTERNAL_AUTH_MODE=jwt`)**
-- Only accepts signed JWTs from the gateway
-- Requires `INTERNAL_JWT_SIGNING_KEY` to be set
-- Production-recommended setting
-
-**Hybrid Mode (`INTERNAL_AUTH_MODE=hybrid`, default)**
-- Accepts both JWT tokens and legacy static tokens
-- Useful during migration from legacy to JWT-based auth
-- Requires either `INTERNAL_JWT_SIGNING_KEY` or `INTERNAL_SERVICE_TOKEN` (or both)
-
-#### Migration Guide: Legacy Tokens → JWT Authentication
-
-1. **Phase 1 - Deploy with Hybrid Mode**
-   ```bash
-   INTERNAL_AUTH_MODE=hybrid
-   INTERNAL_JWT_SIGNING_KEY=<your-32-byte-secret>
-   INTERNAL_SERVICE_TOKEN=<your-legacy-token>
-   ```
-
-2. **Phase 2 - Verify JWT Auth Working**
-   - Monitor logs for `[InternalAuth] JWT verification` messages
-   - Confirm requests are being authenticated via JWT
-
-3. **Phase 3 - Switch to JWT-Only Mode**
-   ```bash
-   INTERNAL_AUTH_MODE=jwt
-   INTERNAL_JWT_SIGNING_KEY=<your-32-byte-secret>
-   # Remove INTERNAL_SERVICE_TOKEN
-   ```
-
-4. **Phase 4 - Remove Legacy Token**
-   - Remove `INTERNAL_SERVICE_TOKEN` from all services
-   - Update gateway to only send JWTs
+Receivers require `INTERNAL_REQUEST_TRUST_FILE` containing only permitted callers' public keys. Callers require their own `INTERNAL_REQUEST_PRIVATE_KEY_FILE` and `INTERNAL_REQUEST_KEY_ID`. Never distribute a caller private key in a shared env file or mount it in a sibling. Deploy all seven compatible services together and follow [the identity runbook](../xynes-infra/infra/release/INTERNAL-REQUEST-IDENTITIES.md) for provisioning and rotation. Protocol source and checked mirrors belong to platform-contracts.
 
 ## Shared Libraries
 
