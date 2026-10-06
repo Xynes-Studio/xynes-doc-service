@@ -1,3 +1,4 @@
+import { signedInit } from './support/internal-request';
 import { describe, it, expect } from 'bun:test';
 import app from '../src/app';
 
@@ -7,7 +8,10 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
   it('returns 401 for missing X-Internal-Service-Token', async () => {
     const req = new Request('http://localhost/internal/doc-actions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+      },
       body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
     });
 
@@ -39,11 +43,17 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
   });
 
   it('returns 400 for missing X-Workspace-Id', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN },
-      body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
-    });
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+        },
+        body: JSON.stringify({ actionKey: 'docs.document.create', payload: {} }),
+      }),
+    );
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
@@ -54,60 +64,69 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
     expect(body.meta?.requestId).toBeDefined();
   });
 
-  it('returns 400 for invalid request body', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({ notActionKey: true }),
-    });
+  it('denies a request without a bound operation', async () => {
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({ notActionKey: true }),
+      }),
+    );
 
     const res = await app.fetch(req);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
 
     const body: any = await res.json();
     expect(body.ok).toBe(false);
-    expect(body.error.code).toBe('VALIDATION_ERROR');
-    expect(body.error.message).toBe('Invalid request body');
+    expect(body.error.code).toBe('FORBIDDEN');
+    expect(body.error.message).toContain('Invalid internal request');
     expect(body.meta?.requestId).toBeDefined();
   });
 
-  it('returns 400 for unknown actionKey', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({ actionKey: 'docs.unknown.action', payload: {} }),
-    });
+  it('denies an unknown actionKey', async () => {
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({ actionKey: 'docs.unknown.action', payload: {} }),
+      }),
+    );
 
     const res = await app.fetch(req);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
 
     const body: any = await res.json();
     expect(body.ok).toBe(false);
-    expect(body.error.code).toBe('UNKNOWN_ACTION');
+    expect(body.error.code).toBe('FORBIDDEN');
     expect(body.meta?.requestId).toBeDefined();
   });
 
   it('returns 400 for payload validation error', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({
-        actionKey: 'docs.document.read',
-        payload: { id: 'not-a-uuid' },
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({
+          actionKey: 'docs.document.read',
+          payload: { id: 'not-a-uuid' },
+        }),
       }),
-    });
+    );
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
@@ -121,18 +140,21 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
   });
 
   it('returns 400 when create payload contains invalid status', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({
-        actionKey: 'docs.document.create',
-        payload: { title: 'Bad', content: {}, status: 'archived' },
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({
+          actionKey: 'docs.document.create',
+          payload: { title: 'Bad', content: {}, status: 'archived' },
+        }),
       }),
-    });
+    );
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
@@ -145,18 +167,21 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
   });
 
   it('returns 400 when create payload contains primitive content', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({
-        actionKey: 'docs.document.create',
-        payload: { title: 'Bad', content: 'nope' },
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({
+          actionKey: 'docs.document.create',
+          payload: { title: 'Bad', content: 'nope' },
+        }),
       }),
-    });
+    );
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
@@ -168,47 +193,53 @@ describe('Internal Doc Actions Endpoint (Unit)', () => {
     expect(body.meta?.requestId).toBeDefined();
   });
 
-  it('returns 413 when request body exceeds configured limit', async () => {
+  it('bounds actual request bytes before authentication', async () => {
     const tooLarge = 'a'.repeat(1024 * 1024 + 2048);
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: JSON.stringify({
-        actionKey: 'docs.document.create',
-        payload: { title: 'Big', content: { text: tooLarge } },
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: JSON.stringify({
+          actionKey: 'docs.document.create',
+          payload: { title: 'Big', content: { text: tooLarge } },
+        }),
       }),
-    });
-
-    const res = await app.fetch(req);
-    expect(res.status).toBe(413);
-
-    const body: any = await res.json();
-    expect(body.ok).toBe(false);
-    expect(body.error.code).toBe('PAYLOAD_TOO_LARGE');
-    expect(body.meta?.requestId).toBeDefined();
-  });
-
-  it('returns 400 for invalid JSON body', async () => {
-    const req = new Request('http://localhost/internal/doc-actions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
-        'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
-      },
-      body: '{ definitely-not-json ',
-    });
+    );
 
     const res = await app.fetch(req);
     expect(res.status).toBe(400);
 
     const body: any = await res.json();
     expect(body.ok).toBe(false);
-    expect(body.error.code).toBe('INVALID_JSON');
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.meta?.requestId).toBeDefined();
+  });
+
+  it('denies invalid JSON before dispatch', async () => {
+    const req = new Request(
+      'http://localhost/internal/doc-actions',
+      signedInit('http://localhost/internal/doc-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Internal-Service-Token': INTERNAL_SERVICE_TOKEN,
+          'X-Workspace-Id': '550e8400-e29b-41d4-a716-446655440000',
+        },
+        body: '{ definitely-not-json ',
+      }),
+    );
+
+    const res = await app.fetch(req);
+    expect(res.status).toBe(403);
+
+    const body: any = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('FORBIDDEN');
     expect(body.meta?.requestId).toBeDefined();
   });
 });

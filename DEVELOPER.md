@@ -183,3 +183,14 @@ All document actions are protected by the authz service:
 - `docs.document.listByWorkspace`
   - Uses `ctx.workspaceId`
   - Returns a light DTO ordered by `createdAt DESC`: `id`, `title`, `status`, `createdAt`, `updatedAt`
+
+## SEC-003-FU-1 current internal authentication
+
+Internal actions now require Ed25519 requests bound to receiver, operation, exact
+body, actor, workspace and request id. Historical shared-token/hybrid instructions
+in this document no longer apply to authentication. Receivers fail closed without
+public trust; callers load only their own signing file. Shared static/HS256 tokens
+are rejected, including authz read checks. Follow the backend infra identity
+runbook for coordinated seven-service rollout and rotation. Protocol mirrors are
+generated from platform-contracts and must be changed/exported there; validate
+`corepack pnpm internal-request:check` with the backend workspace present.
